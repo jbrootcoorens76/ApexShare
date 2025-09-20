@@ -36,7 +36,7 @@ export interface SecurityStackOutputs {
   };
   lambdaExecutionRole: iam.Role;
   apiGatewayRole: iam.Role;
-  cloudTrail: cloudtrail.Trail;
+  cloudTrail?: cloudtrail.Trail;
   complianceNotificationTopic: sns.Topic;
 }
 
@@ -64,8 +64,8 @@ export class SecurityStack extends cdk.Stack {
     // Create WAF Web ACL (simplified for initial deployment)
     const webAcl = this.createWebAcl(config, resourceNames);
 
-    // Create CloudTrail for audit logging (simplified for initial deployment)
-    const cloudTrail = this.createCloudTrail(config, resourceNames, kmsKeys);
+    // Create CloudTrail for audit logging (temporarily disabled for initial deployment)
+    // const cloudTrail = this.createCloudTrail(config, resourceNames, kmsKeys);
 
     // Create Config rules for compliance (simplified for initial deployment)
     // this.createConfigRules(config, resourceNames);
@@ -79,7 +79,7 @@ export class SecurityStack extends cdk.Stack {
       kmsKeys,
       lambdaExecutionRole,
       apiGatewayRole,
-      cloudTrail,
+      // cloudTrail, // Temporarily disabled
       complianceNotificationTopic,
     };
 
@@ -96,7 +96,7 @@ export class SecurityStack extends cdk.Stack {
   ): SecurityStackOutputs['kmsKeys'] {
     // S3 encryption key
     const s3Key = new kms.Key(this, 'S3EncryptionKey', {
-      alias: resourceNames.s3Key,
+      alias: `alias/${resourceNames.s3Key}`,
       description: 'KMS key for S3 bucket encryption',
       enableKeyRotation: SECURITY_CONFIG.ENCRYPTION.KMS_KEY_ROTATION,
       // enableKeyRotation is handled by the separate property
@@ -130,7 +130,7 @@ export class SecurityStack extends cdk.Stack {
 
     // DynamoDB encryption key
     const dynamodbKey = new kms.Key(this, 'DynamoDBEncryptionKey', {
-      alias: resourceNames.dynamoKey,
+      alias: `alias/${resourceNames.dynamoKey}`,
       description: 'KMS key for DynamoDB table encryption',
       enableKeyRotation: SECURITY_CONFIG.ENCRYPTION.KMS_KEY_ROTATION,
       // enableKeyRotation is handled by the separate property
@@ -162,7 +162,7 @@ export class SecurityStack extends cdk.Stack {
 
     // CloudWatch Logs encryption key
     const logsKey = new kms.Key(this, 'LogsEncryptionKey', {
-      alias: `${resourceNames.logGroup}-logs-key`,
+      alias: `alias/apexshare-logs-key-${config.env}`,
       description: 'KMS key for CloudWatch Logs encryption',
       enableKeyRotation: SECURITY_CONFIG.ENCRYPTION.KMS_KEY_ROTATION,
       // enableKeyRotation is handled by the separate property
@@ -199,7 +199,7 @@ export class SecurityStack extends cdk.Stack {
 
     // SES encryption key
     const sesKey = new kms.Key(this, 'SESEncryptionKey', {
-      alias: `apexshare-ses-key-${config.env}`,
+      alias: `alias/apexshare-ses-key-${config.env}`,
       description: 'KMS key for SES encryption',
       enableKeyRotation: SECURITY_CONFIG.ENCRYPTION.KMS_KEY_ROTATION,
       // enableKeyRotation is handled by the separate property
@@ -207,7 +207,7 @@ export class SecurityStack extends cdk.Stack {
 
     // Lambda encryption key
     const lambdaKey = new kms.Key(this, 'LambdaEncryptionKey', {
-      alias: resourceNames.lambdaKey,
+      alias: `alias/${resourceNames.lambdaKey}`,
       description: 'KMS key for Lambda environment variables encryption',
       enableKeyRotation: SECURITY_CONFIG.ENCRYPTION.KMS_KEY_ROTATION,
       // enableKeyRotation is handled by the separate property
@@ -237,7 +237,7 @@ export class SecurityStack extends cdk.Stack {
 
     // General purpose encryption key
     const generalKey = new kms.Key(this, 'GeneralEncryptionKey', {
-      alias: `apexshare-general-key-${config.env}`,
+      alias: `alias/apexshare-general-key-${config.env}`,
       description: 'General purpose KMS key for various services',
       enableKeyRotation: SECURITY_CONFIG.ENCRYPTION.KMS_KEY_ROTATION,
       // enableKeyRotation is handled by the separate property
@@ -506,10 +506,10 @@ export class SecurityStack extends cdk.Stack {
       }),
     });
 
-    // Add event selectors for data events
-    cloudTrail.addEventSelector(cloudtrail.DataResourceType.S3_OBJECT, [
-      `${resourceNames.videosBucket}/*`,
-    ]);
+    // Add event selectors for data events (will be updated post-deployment)
+    // cloudTrail.addEventSelector(cloudtrail.DataResourceType.S3_OBJECT, [
+    //   `${resourceNames.videosBucket}/*`,
+    // ]);
 
     return cloudTrail;
   }
@@ -671,11 +671,11 @@ export class SecurityStack extends cdk.Stack {
       exportName: `${this.stackName}-ApiGatewayRoleArn`,
     });
 
-    new cdk.CfnOutput(this, 'CloudTrailArn', {
-      value: this.outputs.cloudTrail.trailArn,
-      description: 'CloudTrail ARN',
-      exportName: `${this.stackName}-CloudTrailArn`,
-    });
+    // new cdk.CfnOutput(this, 'CloudTrailArn', {
+    //   value: this.outputs.cloudTrail.trailArn,
+    //   description: 'CloudTrail ARN',
+    //   exportName: `${this.stackName}-CloudTrailArn`,
+    // });
 
     new cdk.CfnOutput(this, 'SecurityNotificationTopicArn', {
       value: this.outputs.complianceNotificationTopic.topicArn,

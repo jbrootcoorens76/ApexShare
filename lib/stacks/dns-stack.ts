@@ -147,17 +147,16 @@ export class DnsStack extends cdk.Stack {
     hostedZone: route53.IHostedZone,
     config: any
   ): acm.Certificate {
-    const usEast1Certificate = new acm.Certificate(this, 'CloudFrontCertificate', {
+    const usEast1Certificate = new acm.DnsValidatedCertificate(this, 'CloudFrontCertificate', {
       domainName: config.domain,
       subjectAlternativeNames: [
         `www.${config.domain}`,
         `cdn.${config.domain}`,
         `static.${config.domain}`,
       ],
-      validation: acm.CertificateValidation.fromDns(hostedZone),
+      hostedZone: hostedZone,
       certificateName: `apexshare-${config.env}-cloudfront-cert`,
-      // Note: For CloudFront, this certificate should be created in us-east-1
-      // In CDK v2, use cross-region stack support for proper us-east-1 deployment
+      region: 'us-east-1', // CloudFront requires certificates in us-east-1
     });
 
     // Add tags specific to this certificate

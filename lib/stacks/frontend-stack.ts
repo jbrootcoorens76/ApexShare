@@ -31,7 +31,7 @@ export interface FrontendStackProps extends ApexShareStackProps {
 
 export class FrontendStack extends cdk.Stack {
   public readonly distribution: cloudfront.Distribution;
-  public readonly originAccessControl: cloudfront.OriginAccessControl;
+  public readonly originAccessControl: cloudfront.S3OriginAccessControl;
 
   constructor(scope: Construct, id: string, props: FrontendStackProps) {
     super(scope, id, props);
@@ -44,7 +44,7 @@ export class FrontendStack extends cdk.Stack {
     }
 
     const frontendBucket = crossStackRefs.storageStack.frontendBucket;
-    const certificate = crossStackRefs.dnsStack.certificate;
+    const certificate = crossStackRefs.dnsStack.usEast1Certificate; // Use us-east-1 certificate for CloudFront
     const hostedZone = crossStackRefs.dnsStack.hostedZone;
     const api = crossStackRefs.apiStack.restApi;
     const resourceNames = getResourceNames(config);
@@ -76,8 +76,8 @@ export class FrontendStack extends cdk.Stack {
       certificate
     );
 
-    // Update S3 bucket policy for CloudFront access
-    this.updateS3BucketPolicy(frontendBucket, this.distribution);
+    // Note: S3 bucket policy is automatically managed by Origin Access Control (OAC)
+    // No manual bucket policy update needed
 
     // Create Route 53 records if custom domain is configured
     if (hostedZone && certificate) {
@@ -96,12 +96,9 @@ export class FrontendStack extends cdk.Stack {
    */
   private createOriginAccessControl(
     resourceNames: ReturnType<typeof getResourceNames>
-  ): cloudfront.OriginAccessControl {
-    return new cloudfront.OriginAccessControl(this, 'OriginAccessControl', {
+  ): cloudfront.S3OriginAccessControl {
+    return new cloudfront.S3OriginAccessControl(this, 'OriginAccessControl', {
       description: `OAC for ApexShare frontend bucket - ${resourceNames.getTags().Environment}`,
-      originAccessControlOriginType: cloudfront.OriginAccessControlOriginType.S3,
-      signingBehavior: cloudfront.OriginAccessControlSigningBehavior.ALWAYS,
-      signingProtocol: cloudfront.OriginAccessControlSigningProtocol.SIGV4,
     });
   }
 
@@ -122,7 +119,7 @@ export class FrontendStack extends cdk.Stack {
           override: true,
         },
         frameOptions: {
-          frameOption: cloudfront.FrameOptions.DENY,
+          frameOption: cloudfront.HeadersFrameOption.DENY,
           override: true,
         },
         xssProtection: {
@@ -131,25 +128,15 @@ export class FrontendStack extends cdk.Stack {
           override: true,
         },
         referrerPolicy: {
-          referrerPolicy: cloudfront.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+          referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
           override: true,
         },
       },
       customHeadersBehavior: {
         customHeaders: [
           {
-            header: 'Content-Security-Policy',
-            value: CLOUDFRONT_CONFIG.SECURITY_HEADERS.CONTENT_SECURITY_POLICY,
-            override: true,
-          },
-          {
             header: 'Permissions-Policy',
             value: CLOUDFRONT_CONFIG.SECURITY_HEADERS.PERMISSIONS_POLICY,
-            override: true,
-          },
-          {
-            header: 'X-Content-Type-Options',
-            value: CLOUDFRONT_CONFIG.SECURITY_HEADERS.CONTENT_TYPE_OPTIONS,
             override: true,
           },
         ],
@@ -205,7 +192,7 @@ export class FrontendStack extends cdk.Stack {
     resourceNames: ReturnType<typeof getResourceNames>,
     frontendBucket: s3.Bucket,
     api: apigateway.RestApi,
-    originAccessControl: cloudfront.OriginAccessControl,
+    originAccessControl: cloudfront.S3OriginAccessControl,
     securityHeadersPolicy: cloudfront.ResponseHeadersPolicy,
     cachePolicies: any,
     certificate?: certificatemanager.ICertificate

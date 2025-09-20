@@ -13,8 +13,8 @@ import { SecurityStack } from '../lib/stacks/security-stack';
 import { DnsStack } from '../lib/stacks/dns-stack';
 import { ApiStack } from '../lib/stacks/api-stack';
 import { EmailStack } from '../lib/stacks/email-stack';
-// import { FrontendStack } from '../lib/stacks/frontend-stack';
-// import { MonitoringStack } from '../lib/stacks/monitoring-stack';
+import { FrontendStack } from '../lib/stacks/frontend-stack';
+import { MonitoringStack } from '../lib/stacks/monitoring-stack';
 import { getEnvironmentConfig, validateEnvironmentConfig } from '../lib/shared/config';
 import { CrossStackRefs } from '../lib/shared/types';
 
@@ -68,6 +68,7 @@ crossStackRefs.securityStack = {
   webAcl: securityStack.outputs.webAcl,
   lambdaRole: securityStack.outputs.lambdaExecutionRole,
   apiGatewayRole: securityStack.outputs.apiGatewayRole,
+  kmsKeys: securityStack.outputs.kmsKeys,
 };
 
 // 2. DNS Stack (Route 53, Certificates)
@@ -84,7 +85,10 @@ crossStackRefs.dnsStack = {
 
 // 3. Storage Stack (S3, DynamoDB)
 console.log('📦 Creating Storage Stack...');
-const storageStack = new StorageStack(app, `ApexShare-Storage-${config.env}`, stackProps);
+const storageStack = new StorageStack(app, `ApexShare-Storage-${config.env}`, {
+  ...stackProps,
+  crossStackRefs,
+});
 crossStackRefs.storageStack = {
   videosBucket: storageStack.videosBucket,
   frontendBucket: storageStack.frontendBucket,
@@ -109,23 +113,22 @@ crossStackRefs.apiStack = {
 };
 
 // 5. Frontend Stack (CloudFront, Static S3)
-// 5. Frontend Stack (CloudFront, Static S3) - Temporarily disabled for compilation
-// console.log('📦 Creating Frontend Stack...');
-// const frontendStack = new FrontendStack(app, `ApexShare-Frontend-${config.env}`, {
-//   ...stackProps,
-//   crossStackRefs,
-// });
+console.log('📦 Creating Frontend Stack...');
+const frontendStack = new FrontendStack(app, `ApexShare-Frontend-${config.env}`, {
+  ...stackProps,
+  crossStackRefs,
+});
 
 // 6. Email Stack (SES)
 console.log('📦 Creating Email Stack...');
 const emailStack = new EmailStack(app, `ApexShare-Email-${config.env}`, stackProps);
 
-// 7. Monitoring Stack (CloudWatch, Alarms) - Temporarily disabled for compilation
-// console.log('📦 Creating Monitoring Stack...');
-// const monitoringStack = new MonitoringStack(app, `ApexShare-Monitoring-${config.env}`, {
-//   ...stackProps,
-//   crossStackRefs,
-// });
+// 7. Monitoring Stack (CloudWatch, Alarms)
+console.log('📦 Creating Monitoring Stack...');
+const monitoringStack = new MonitoringStack(app, `ApexShare-Monitoring-${config.env}`, {
+  ...stackProps,
+  crossStackRefs,
+});
 
 /**
  * Set up stack dependencies to ensure proper deployment order
@@ -139,19 +142,19 @@ apiStack.addDependency(storageStack);
 apiStack.addDependency(securityStack);
 
 // Frontend stack depends on DNS, API, and Security stacks
-// frontendStack.addDependency(dnsStack);
-// frontendStack.addDependency(apiStack);
-// frontendStack.addDependency(securityStack);
+frontendStack.addDependency(dnsStack);
+frontendStack.addDependency(apiStack);
+frontendStack.addDependency(securityStack);
 
 // Email stack depends on DNS stack for domain verification
 emailStack.addDependency(dnsStack);
 
 // Monitoring stack depends on all other stacks for complete visibility
-// monitoringStack.addDependency(securityStack);
-// monitoringStack.addDependency(storageStack);
-// monitoringStack.addDependency(apiStack);
-// monitoringStack.addDependency(frontendStack);
-// monitoringStack.addDependency(emailStack);
+monitoringStack.addDependency(securityStack);
+monitoringStack.addDependency(storageStack);
+monitoringStack.addDependency(apiStack);
+monitoringStack.addDependency(frontendStack);
+monitoringStack.addDependency(emailStack);
 
 /**
  * Add global tags to all resources

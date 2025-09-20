@@ -10,6 +10,7 @@ import { EnvironmentConfig } from './config';
 // CDK Stack Props with Environment Configuration
 export interface ApexShareStackProps extends StackProps {
   config: EnvironmentConfig;
+  crossStackRefs?: CrossStackRefs;
 }
 
 // Upload Request Interface
@@ -274,19 +275,30 @@ export interface VpcConfig {
   }>;
 }
 
-// Cross-Stack References
+// Cross-Stack References with proper typing
 export interface CrossStackRefs {
   storageStack?: {
     videosBucket: any;
     frontendBucket: any;
     templatesBucket: any;
     uploadsTable: any;
-    kmsKeys: Record<string, any>;
+    kmsKeys: {
+      s3: any;
+      dynamodb: any;
+    };
   };
   securityStack?: {
     webAcl: any;
     lambdaRole: any;
     apiGatewayRole: any;
+    kmsKeys: {
+      s3: any;
+      dynamodb: any;
+      logs: any;
+      ses: any;
+      lambda: any;
+      general: any;
+    };
   };
   dnsStack?: {
     hostedZone: any;

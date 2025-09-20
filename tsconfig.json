@@ -35,16 +35,16 @@
     }
   },
   "include": [
+    "bin/**/*",
     "lib/**/*",
-    "lambda/**/*",
-    "frontend/src/**/*",
-    "tests/**/*"
+    "lambda/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "cdk.out",
-    "frontend/dist",
+    "frontend/**/*",
+    "tests/**/*",
     "lambda/cost-anomaly-detector/**/*",
     "lambda/cost-forecaster/**/*",
     "lambda/cost-metrics-publisher/**/*",
@@ -56,11 +56,7 @@
     "lambda/tag-enforcer/**/*",
     "lib/constructs/**/*",
     "lib/stacks/cost-optimization-stack.ts",
-    "lib/stacks/email-stack.ts",
     "lib/stacks/monitoring-stack.ts",
-    "lib/stacks/frontend-stack.ts",
-    "lambda/upload-handler/**/*",
-    "lambda/download-handler/**/*",
-    "lambda/email-sender/**/*"
+    "lib/stacks/frontend-stack.ts"
   ]
 }

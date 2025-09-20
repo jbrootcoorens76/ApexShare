@@ -19,6 +19,8 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
 import { Construct } from 'constructs';
 import { ApexShareStackProps, CrossStackRefs } from '../shared/types';
 import { getResourceNames } from '../shared/config';
@@ -36,10 +38,12 @@ export interface ApiStackProps extends ApexShareStackProps {
 
 export class ApiStack extends cdk.Stack {
   public readonly api: apigateway.RestApi;
+  public readonly customDomain: apigateway.DomainName;
   public readonly uploadHandler: lambda.Function;
   public readonly downloadHandler: lambda.Function;
   public readonly emailSender: lambda.Function;
   public readonly healthCheckHandler: lambda.Function;
+  public readonly authHandler: lambda.Function;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
@@ -99,11 +103,16 @@ export class ApiStack extends cdk.Stack {
 
     this.healthCheckHandler = this.createHealthCheckHandler(config, resourceNames);
 
+    this.authHandler = this.createAuthHandler(config, resourceNames);
+
     // TODO: Set up S3 event notifications (currently disabled to avoid cyclic dependencies)
     // this.setupS3EventNotifications(videosBucket, this.emailSender);
 
     // Create API Gateway
     this.api = this.createApiGateway(config, resourceNames);
+
+    // Create custom domain for API Gateway
+    this.customDomain = this.createCustomDomain(config, crossStackRefs);
 
     // Create API resources and methods
     this.setupApiRoutes();
@@ -378,6 +387,40 @@ export class ApiStack extends cdk.Stack {
   }
 
   /**
+   * Create Authentication Handler Lambda function
+   */
+  private createAuthHandler(
+    config: any,
+    resourceNames: ReturnType<typeof getResourceNames>
+  ): lambda.Function {
+    const logGroup = new logs.LogGroup(this, 'AuthHandlerLogGroup', {
+      logGroupName: `/aws/lambda/apexshare-auth-handler-${config.env}`,
+      retention: logs.RetentionDays.TWO_WEEKS,
+      removalPolicy: config.env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+    });
+
+    return new lambda.Function(this, 'AuthHandler', {
+      functionName: `apexshare-auth-handler-${config.env}`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      architecture: lambda.Architecture.ARM_64,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/auth-handler'),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      logGroup,
+      retryAttempts: 2,
+      maxEventAge: cdk.Duration.hours(1),
+      environment: {
+        ...LAMBDA_CONFIG.ENVIRONMENT_VARIABLES,
+        CORS_ORIGINS: config.corsOrigins.join(','),
+        LOG_LEVEL: config.logLevel,
+        JWT_SECRET: `apexshare-jwt-secret-${config.env}-${Date.now()}`, // In production, use AWS Secrets Manager
+        NODE_ENV: config.env,
+      },
+    });
+  }
+
+  /**
    * Setup S3 event notifications to trigger email sending
    */
   private setupS3EventNotifications(videosBucket: s3.Bucket, emailSender: lambda.Function): void {
@@ -416,6 +459,7 @@ export class ApiStack extends cdk.Stack {
       },
       deployOptions: {
         stageName: API_CONFIG.VERSION,
+        description: `Deployment with corrected base path mapping - ${new Date().toISOString()}`,
         throttlingRateLimit: config.api.throttling.rateLimit,
         throttlingBurstLimit: config.api.throttling.burstLimit,
         loggingLevel: apigateway.MethodLoggingLevel.INFO,
@@ -436,6 +480,19 @@ export class ApiStack extends cdk.Stack {
       },
       policy: new iam.PolicyDocument({
         statements: [
+          // Allow all requests over HTTPS
+          new iam.PolicyStatement({
+            sid: 'AllowPublicAccess',
+            effect: iam.Effect.ALLOW,
+            principals: [new iam.AnyPrincipal()],
+            actions: ['execute-api:Invoke'],
+            resources: ['*'],
+            conditions: {
+              Bool: {
+                'aws:SecureTransport': 'true',
+              },
+            },
+          }),
           // Deny requests without HTTPS
           new iam.PolicyStatement({
             sid: 'DenyInsecureConnections',
@@ -452,6 +509,47 @@ export class ApiStack extends cdk.Stack {
         ],
       }),
     });
+  }
+
+  /**
+   * Create custom domain for API Gateway
+   */
+  private createCustomDomain(
+    config: any,
+    crossStackRefs: CrossStackRefs
+  ): apigateway.DomainName {
+    if (!crossStackRefs.dnsStack) {
+      throw new Error('DNS stack references are required for custom domain');
+    }
+
+    const { wildcardCertificate, hostedZone } = crossStackRefs.dnsStack;
+    const apiDomainName = `api.${config.domain}`;
+
+    // Create custom domain name
+    const customDomain = new apigateway.DomainName(this, 'ApiCustomDomain', {
+      domainName: apiDomainName,
+      certificate: wildcardCertificate,
+      endpointType: apigateway.EndpointType.REGIONAL,
+      securityPolicy: apigateway.SecurityPolicy.TLS_1_2,
+    });
+
+    // Create base path mapping to API root
+    customDomain.addBasePathMapping(this.api, {
+      basePath: '',
+    });
+
+    // Create Route53 A record pointing to the custom domain
+    new route53.ARecord(this, 'ApiAliasRecord', {
+      zone: hostedZone,
+      recordName: 'api',
+      target: route53.RecordTarget.fromAlias(
+        new route53targets.ApiGatewayDomain(customDomain)
+      ),
+      ttl: cdk.Duration.minutes(5),
+      comment: 'API Gateway custom domain alias record',
+    });
+
+    return customDomain;
   }
 
   /**
@@ -513,12 +611,98 @@ export class ApiStack extends cdk.Stack {
       },
     });
 
-    // API v1 root
-    const apiV1 = this.api.root.addResource('api').addResource(API_CONFIG.VERSION);
+    // API v1 root (note: stage already includes /v1 prefix)
+    const apiV1 = this.api.root;
 
     // Health check endpoint
     const health = apiV1.addResource('health');
-    health.addMethod('GET', new apigateway.LambdaIntegration(this.healthCheckHandler));
+    health.addMethod('GET', new apigateway.LambdaIntegration(this.healthCheckHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+    });
+
+    // Authentication endpoints
+    const auth = apiV1.addResource('auth');
+
+    // POST /auth/login
+    auth.addResource('login').addMethod('POST', new apigateway.LambdaIntegration(this.authHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '400',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // GET /auth/me
+    auth.addResource('me').addMethod('GET', new apigateway.LambdaIntegration(this.authHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE, // Token validation handled in Lambda
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '404',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // POST /auth/logout
+    auth.addResource('logout').addMethod('POST', new apigateway.LambdaIntegration(this.authHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
 
     // Upload endpoints
     const uploads = apiV1.addResource('uploads');
@@ -553,13 +737,16 @@ export class ApiStack extends cdk.Stack {
 
     // Recent uploads endpoint (for dashboard)
     const recentUploads = uploads.addResource('recent');
-    recentUploads.addMethod('GET', new apigateway.LambdaIntegration(this.uploadHandler));
+    recentUploads.addMethod('GET', new apigateway.LambdaIntegration(this.uploadHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+    });
 
     // Download endpoints
     const downloads = apiV1.addResource('downloads');
     const downloadFile = downloads.addResource('{fileId}');
 
     downloadFile.addMethod('GET', new apigateway.LambdaIntegration(this.downloadHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE,
       requestParameters: {
         'method.request.path.fileId': true,
       },
@@ -596,10 +783,22 @@ export class ApiStack extends cdk.Stack {
       exportName: `${cdk.Stack.of(this).stackName}-ApiUrl`,
     });
 
+    new cdk.CfnOutput(this, 'ApiCustomDomainUrl', {
+      value: `https://${this.customDomain.domainName}`,
+      description: 'API Gateway Custom Domain URL',
+      exportName: `${cdk.Stack.of(this).stackName}-ApiCustomDomainUrl`,
+    });
+
     new cdk.CfnOutput(this, 'ApiId', {
       value: this.api.restApiId,
       description: 'API Gateway ID',
       exportName: `${cdk.Stack.of(this).stackName}-ApiId`,
+    });
+
+    new cdk.CfnOutput(this, 'ApiCustomDomainName', {
+      value: this.customDomain.domainName,
+      description: 'API Gateway Custom Domain Name',
+      exportName: `${cdk.Stack.of(this).stackName}-ApiCustomDomainName`,
     });
 
     new cdk.CfnOutput(this, 'UploadHandlerArn', {
@@ -618,6 +817,12 @@ export class ApiStack extends cdk.Stack {
       value: this.emailSender.functionArn,
       description: 'Email Sender Lambda ARN',
       exportName: `${cdk.Stack.of(this).stackName}-EmailSenderArn`,
+    });
+
+    new cdk.CfnOutput(this, 'AuthHandlerArn', {
+      value: this.authHandler.functionArn,
+      description: 'Authentication Handler Lambda ARN',
+      exportName: `${cdk.Stack.of(this).stackName}-AuthHandlerArn`,
     });
   }
 }

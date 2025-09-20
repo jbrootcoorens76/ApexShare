@@ -53,7 +53,7 @@ const environmentConfigs: Record<string, Partial<AppConfig>> = {
     enableAnalytics: false,
   },
   production: {
-    apiBaseUrl: 'https://api.apexshare.be',
+    apiBaseUrl: 'https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1',
     enableDetailedLogging: false,
     enableAnalytics: true,
   },

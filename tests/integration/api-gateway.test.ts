@@ -38,7 +38,7 @@ describe('API Gateway Integration Tests', () => {
         expect(response.headers['access-control-allow-origin']).toBeDefined();
         expect(response.headers['access-control-allow-methods']).toContain('POST');
         expect(response.headers['access-control-allow-headers']).toContain('Content-Type');
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -64,7 +64,7 @@ describe('API Gateway Integration Tests', () => {
         });
 
         expect(response.headers['access-control-allow-origin']).toBeDefined();
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -103,7 +103,7 @@ describe('API Gateway Integration Tests', () => {
           expect(response.data.data).toHaveProperty('fields');
           expect(response.data.data).toHaveProperty('expiresAt');
         }
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -128,7 +128,7 @@ describe('API Gateway Integration Tests', () => {
         expect(response.status).toBe(400);
         expect(response.data).toHaveProperty('success', false);
         expect(response.data.error).toContain('email');
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -153,7 +153,7 @@ describe('API Gateway Integration Tests', () => {
         expect(response.status).toBe(400);
         expect(response.data).toHaveProperty('success', false);
         expect(response.data.error).toContain('size');
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -178,7 +178,7 @@ describe('API Gateway Integration Tests', () => {
         expect(response.status).toBe(400);
         expect(response.data).toHaveProperty('success', false);
         expect(response.data.error).toContain('Content type');
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -199,7 +199,7 @@ describe('API Gateway Integration Tests', () => {
 
         expect(response.status).toBe(400);
         expect(response.data).toHaveProperty('success', false);
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -229,7 +229,7 @@ describe('API Gateway Integration Tests', () => {
         } else {
           expect(response.data).toHaveProperty('success', false);
         }
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -248,7 +248,7 @@ describe('API Gateway Integration Tests', () => {
         expect(response.status).toBe(400);
         expect(response.data).toHaveProperty('success', false);
         expect(response.data.error).toContain('Invalid file ID');
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -267,7 +267,7 @@ describe('API Gateway Integration Tests', () => {
         expect(response.status).toBe(405);
         expect(response.data).toHaveProperty('success', false);
         expect(response.data.error).toContain('Method not allowed');
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -311,7 +311,7 @@ describe('API Gateway Integration Tests', () => {
           expect(status).toBeGreaterThanOrEqual(200);
           expect(status).toBeLessThan(600);
         });
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -341,7 +341,7 @@ describe('API Gateway Integration Tests', () => {
 
         expect(response.status).toBe(400);
         expect(response.data).toHaveProperty('success', false);
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -368,7 +368,7 @@ describe('API Gateway Integration Tests', () => {
 
         expect(response.status).toBe(400);
         expect(response.data).toHaveProperty('success', false);
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -395,7 +395,7 @@ describe('API Gateway Integration Tests', () => {
         expect(response.data).toHaveProperty('success', false);
         expect(response.data).toHaveProperty('error');
         expect(typeof response.data.error).toBe('string');
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -426,7 +426,7 @@ describe('API Gateway Integration Tests', () => {
           expect(response.data).toHaveProperty('success', false);
           expect(response.data).toHaveProperty('error');
         }
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -462,7 +462,7 @@ describe('API Gateway Integration Tests', () => {
 
         // Response should have appropriate status
         expect([200, 400, 404, 429, 500]).toContain(response.status);
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -488,7 +488,7 @@ describe('API Gateway Integration Tests', () => {
 
         // Should still process the request
         expect([200, 400]).toContain(response.status);
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;
@@ -517,7 +517,7 @@ describe('API Gateway Integration Tests', () => {
         // Should handle gracefully
         expect(response.status).toBeGreaterThanOrEqual(200);
         expect(response.status).toBeLessThan(600);
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           console.log('API Gateway not available - skipping integration test');
           return;

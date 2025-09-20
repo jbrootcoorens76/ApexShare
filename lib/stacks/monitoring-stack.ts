@@ -12,6 +12,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -93,14 +94,14 @@ export class MonitoringStack extends cdk.Stack {
   ): { alarmTopic: sns.Topic; costAlarmTopic: sns.Topic } {
     // General alarm notifications
     const alarmTopic = new sns.Topic(this, 'AlarmTopic', {
-      topicName: `${resourceNames.getResourceName('alarms')}`,
+      topicName: `apexshare-alarms-${config.env}`,
       displayName: 'ApexShare Operational Alarms',
       fifo: false,
     });
 
     // Cost alarm notifications
     const costAlarmTopic = new sns.Topic(this, 'CostAlarmTopic', {
-      topicName: `${resourceNames.getResourceName('cost-alarms')}`,
+      topicName: `apexshare-cost-alarms-${config.env}`,
       displayName: 'ApexShare Cost Alarms',
       fifo: false,
     });
@@ -127,7 +128,7 @@ export class MonitoringStack extends cdk.Stack {
     crossStackRefs: CrossStackRefs
   ): cloudwatch.Dashboard {
     const dashboard = new cloudwatch.Dashboard(this, 'ApexShareDashboard', {
-      dashboardName: `${resourceNames.getResourceName('dashboard')}`,
+      dashboardName: resourceNames.dashboard,
       periodOverride: cloudwatch.PeriodOverride.AUTO,
     });
 
@@ -141,7 +142,7 @@ export class MonitoringStack extends cdk.Stack {
           namespace: 'AWS/ApiGateway',
           metricName: 'Count',
           dimensionsMap: {
-            ApiName: `${resourceNames.getResourceName('api')}`,
+            ApiName: resourceNames.restApi,
           },
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
@@ -151,7 +152,7 @@ export class MonitoringStack extends cdk.Stack {
           namespace: 'AWS/ApiGateway',
           metricName: '4XXError',
           dimensionsMap: {
-            ApiName: `${resourceNames.getResourceName('api')}`,
+            ApiName: resourceNames.restApi,
           },
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
@@ -161,7 +162,7 @@ export class MonitoringStack extends cdk.Stack {
           namespace: 'AWS/ApiGateway',
           metricName: '5XXError',
           dimensionsMap: {
-            ApiName: `${resourceNames.getResourceName('api')}`,
+            ApiName: resourceNames.restApi,
           },
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
@@ -173,7 +174,7 @@ export class MonitoringStack extends cdk.Stack {
           namespace: 'AWS/ApiGateway',
           metricName: 'Latency',
           dimensionsMap: {
-            ApiName: `${resourceNames.getResourceName('api')}`,
+            ApiName: resourceNames.restApi,
           },
           statistic: 'Average',
           period: cdk.Duration.minutes(5),
@@ -231,7 +232,7 @@ export class MonitoringStack extends cdk.Stack {
           namespace: 'AWS/DynamoDB',
           metricName: 'ConsumedReadCapacityUnits',
           dimensionsMap: {
-            TableName: `${resourceNames.getResourceName('uploads-table')}`,
+            TableName: resourceNames.uploadsTable,
           },
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
@@ -241,7 +242,7 @@ export class MonitoringStack extends cdk.Stack {
           namespace: 'AWS/DynamoDB',
           metricName: 'ConsumedWriteCapacityUnits',
           dimensionsMap: {
-            TableName: `${resourceNames.getResourceName('uploads-table')}`,
+            TableName: resourceNames.uploadsTable,
           },
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
@@ -253,7 +254,7 @@ export class MonitoringStack extends cdk.Stack {
           namespace: 'AWS/DynamoDB',
           metricName: 'ItemCount',
           dimensionsMap: {
-            TableName: `${resourceNames.getResourceName('uploads-table')}`,
+            TableName: resourceNames.uploadsTable,
           },
           statistic: 'Average',
           period: cdk.Duration.hours(1),
@@ -272,7 +273,7 @@ export class MonitoringStack extends cdk.Stack {
           namespace: 'AWS/S3',
           metricName: 'BucketSizeBytes',
           dimensionsMap: {
-            BucketName: `${resourceNames.getResourceName('videos-bucket')}`,
+            BucketName: resourceNames.videosBucket,
             StorageType: 'StandardStorage',
           },
           statistic: 'Average',
@@ -285,7 +286,7 @@ export class MonitoringStack extends cdk.Stack {
           namespace: 'AWS/S3',
           metricName: 'NumberOfObjects',
           dimensionsMap: {
-            BucketName: `${resourceNames.getResourceName('videos-bucket')}`,
+            BucketName: resourceNames.videosBucket,
             StorageType: 'AllStorageTypes',
           },
           statistic: 'Average',
@@ -397,13 +398,13 @@ export class MonitoringStack extends cdk.Stack {
   ): void {
     // API Gateway error rate alarm
     new cloudwatch.Alarm(this, 'ApiGateway5xxErrorAlarm', {
-      alarmName: `${resourceNames.getResourceName('api-5xx-errors')}`,
+      alarmName: `apexshare-api-5xx-errors-${config.env}`,
       alarmDescription: 'High 5XX error rate in API Gateway',
       metric: new cloudwatch.Metric({
         namespace: 'AWS/ApiGateway',
         metricName: '5XXError',
         dimensionsMap: {
-          ApiName: `${resourceNames.getResourceName('api')}`,
+          ApiName: resourceNames.restApi,
         },
         statistic: 'Sum',
         period: cdk.Duration.minutes(5),
@@ -411,17 +412,17 @@ export class MonitoringStack extends cdk.Stack {
       threshold: MONITORING_CONFIG.ALARMS.API_ERROR_THRESHOLD,
       evaluationPeriods: 2,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    }).addAlarmAction(new cloudwatch.SnsAction(alarmTopic));
+    }).addAlarmAction(new cloudwatchActions.SnsAction(alarmTopic));
 
     // API Gateway latency alarm
     new cloudwatch.Alarm(this, 'ApiGatewayLatencyAlarm', {
-      alarmName: `${resourceNames.getResourceName('api-latency')}`,
+      alarmName: `apexshare-api-latency-${config.env}`,
       alarmDescription: 'High latency in API Gateway',
       metric: new cloudwatch.Metric({
         namespace: 'AWS/ApiGateway',
         metricName: 'Latency',
         dimensionsMap: {
-          ApiName: `${resourceNames.getResourceName('api')}`,
+          ApiName: resourceNames.restApi,
         },
         statistic: 'Average',
         period: cdk.Duration.minutes(5),
@@ -429,24 +430,24 @@ export class MonitoringStack extends cdk.Stack {
       threshold: MONITORING_CONFIG.ALARMS.API_LATENCY_THRESHOLD,
       evaluationPeriods: 3,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    }).addAlarmAction(new cloudwatch.SnsAction(alarmTopic));
+    }).addAlarmAction(new cloudwatchActions.SnsAction(alarmTopic));
 
     // Lambda error rate alarm
     const lambdaFunctions = [
-      'upload-handler',
-      'download-handler',
-      'email-sender',
+      'uploadHandler',
+      'downloadHandler',
+      'emailSender',
     ];
 
     lambdaFunctions.forEach((functionName) => {
       new cloudwatch.Alarm(this, `${functionName}ErrorAlarm`, {
-        alarmName: `${resourceNames.getResourceName(`${functionName}-errors`)}`,
+        alarmName: `apexshare-${functionName}-errors-${config.env}`,
         alarmDescription: `High error rate in ${functionName} Lambda function`,
         metric: new cloudwatch.Metric({
           namespace: 'AWS/Lambda',
           metricName: 'Errors',
           dimensionsMap: {
-            FunctionName: `${resourceNames.getResourceName(functionName)}`,
+            FunctionName: resourceNames[functionName as keyof typeof resourceNames] as string,
           },
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
@@ -454,17 +455,17 @@ export class MonitoringStack extends cdk.Stack {
         threshold: MONITORING_CONFIG.ALARMS.LAMBDA_ERROR_THRESHOLD,
         evaluationPeriods: 2,
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      }).addAlarmAction(new cloudwatch.SnsAction(alarmTopic));
+      }).addAlarmAction(new cloudwatchActions.SnsAction(alarmTopic));
 
       // Lambda duration alarm
       new cloudwatch.Alarm(this, `${functionName}DurationAlarm`, {
-        alarmName: `${resourceNames.getResourceName(`${functionName}-duration`)}`,
+        alarmName: `apexshare-${functionName}-duration-${config.env}`,
         alarmDescription: `High duration in ${functionName} Lambda function`,
         metric: new cloudwatch.Metric({
           namespace: 'AWS/Lambda',
           metricName: 'Duration',
           dimensionsMap: {
-            FunctionName: `${resourceNames.getResourceName(functionName)}`,
+            FunctionName: resourceNames[functionName as keyof typeof resourceNames] as string,
           },
           statistic: 'Average',
           period: cdk.Duration.minutes(5),
@@ -472,18 +473,18 @@ export class MonitoringStack extends cdk.Stack {
         threshold: MONITORING_CONFIG.ALARMS.LAMBDA_DURATION_THRESHOLD,
         evaluationPeriods: 3,
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      }).addAlarmAction(new cloudwatch.SnsAction(alarmTopic));
+      }).addAlarmAction(new cloudwatchActions.SnsAction(alarmTopic));
     });
 
     // DynamoDB throttle alarm
     new cloudwatch.Alarm(this, 'DynamoDBThrottleAlarm', {
-      alarmName: `${resourceNames.getResourceName('dynamodb-throttles')}`,
+      alarmName: `apexshare-dynamodb-throttles-${config.env}`,
       alarmDescription: 'DynamoDB throttling detected',
       metric: new cloudwatch.Metric({
         namespace: 'AWS/DynamoDB',
         metricName: 'ThrottledRequests',
         dimensionsMap: {
-          TableName: `${resourceNames.getResourceName('uploads-table')}`,
+          TableName: resourceNames.uploadsTable,
         },
         statistic: 'Sum',
         period: cdk.Duration.minutes(5),
@@ -491,17 +492,17 @@ export class MonitoringStack extends cdk.Stack {
       threshold: MONITORING_CONFIG.ALARMS.DYNAMODB_THROTTLE_THRESHOLD,
       evaluationPeriods: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    }).addAlarmAction(new cloudwatch.SnsAction(alarmTopic));
+    }).addAlarmAction(new cloudwatchActions.SnsAction(alarmTopic));
 
     // S3 error alarm
     new cloudwatch.Alarm(this, 'S3ErrorAlarm', {
-      alarmName: `${resourceNames.getResourceName('s3-errors')}`,
+      alarmName: `apexshare-s3-errors-${config.env}`,
       alarmDescription: 'High S3 error rate',
       metric: new cloudwatch.Metric({
         namespace: 'AWS/S3',
         metricName: '4xxErrors',
         dimensionsMap: {
-          BucketName: `${resourceNames.getResourceName('videos-bucket')}`,
+          BucketName: resourceNames.videosBucket,
         },
         statistic: 'Sum',
         period: cdk.Duration.minutes(5),
@@ -509,7 +510,7 @@ export class MonitoringStack extends cdk.Stack {
       threshold: MONITORING_CONFIG.ALARMS.S3_ERROR_THRESHOLD,
       evaluationPeriods: 2,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    }).addAlarmAction(new cloudwatch.SnsAction(alarmTopic));
+    }).addAlarmAction(new cloudwatchActions.SnsAction(alarmTopic));
   }
 
   /**
@@ -525,7 +526,7 @@ export class MonitoringStack extends cdk.Stack {
     // Create budget for monthly spending
     new budgets.CfnBudget(this, 'MonthlyBudget', {
       budget: {
-        budgetName: `${resourceNames.getResourceName('monthly-budget')}`,
+        budgetName: `apexshare-monthly-budget-${config.env}`,
         budgetType: 'COST',
         timeUnit: 'MONTHLY',
         budgetLimit: {
@@ -533,8 +534,7 @@ export class MonitoringStack extends cdk.Stack {
           unit: 'USD',
         },
         costFilters: {
-          TagKey: ['Project'],
-          TagValue: ['ApexShare'],
+          TagKeyValue: ['Project$ApexShare'],
         },
       },
       notificationsWithSubscribers: COST_CONFIG.BUDGET_ALERTS.THRESHOLDS.map((threshold) => ({
@@ -556,7 +556,7 @@ export class MonitoringStack extends cdk.Stack {
     // Create budget for daily spending
     new budgets.CfnBudget(this, 'DailyBudget', {
       budget: {
-        budgetName: `${resourceNames.getResourceName('daily-budget')}`,
+        budgetName: `apexshare-daily-budget-${config.env}`,
         budgetType: 'COST',
         timeUnit: 'DAILY',
         budgetLimit: {
@@ -564,8 +564,7 @@ export class MonitoringStack extends cdk.Stack {
           unit: 'USD',
         },
         costFilters: {
-          TagKey: ['Project'],
-          TagValue: ['ApexShare'],
+          TagKeyValue: ['Project$ApexShare'],
         },
       },
       notificationsWithSubscribers: [
@@ -596,19 +595,19 @@ export class MonitoringStack extends cdk.Stack {
   ): void {
     // API Gateway access logs query
     new logs.CfnQueryDefinition(this, 'ApiGatewayErrorsQuery', {
-      name: `${resourceNames.getResourceName('api-errors-query')}`,
+      name: `apexshare-api-errors-query-${config.env}`,
       queryString: `
         fields @timestamp, @message, @requestId
         | filter @message like /ERROR/
         | sort @timestamp desc
         | limit 100
       `,
-      logGroupNames: [`/aws/apigateway/${resourceNames.getResourceName('api')}`],
+      logGroupNames: [`/aws/apigateway/${resourceNames.restApi}`],
     });
 
     // Lambda function errors query
     new logs.CfnQueryDefinition(this, 'LambdaErrorsQuery', {
-      name: `${resourceNames.getResourceName('lambda-errors-query')}`,
+      name: `apexshare-lambda-errors-query-${config.env}`,
       queryString: `
         fields @timestamp, @message, @requestId, @type
         | filter @type = "ERROR"
@@ -616,22 +615,22 @@ export class MonitoringStack extends cdk.Stack {
         | limit 100
       `,
       logGroupNames: [
-        `/aws/lambda/${resourceNames.getResourceName('upload-handler')}`,
-        `/aws/lambda/${resourceNames.getResourceName('download-handler')}`,
-        `/aws/lambda/${resourceNames.getResourceName('email-sender')}`,
+        `/aws/lambda/${resourceNames.uploadHandler}`,
+        `/aws/lambda/${resourceNames.downloadHandler}`,
+        `/aws/lambda/${resourceNames.emailSender}`,
       ],
     });
 
     // Security events query
     new logs.CfnQueryDefinition(this, 'SecurityEventsQuery', {
-      name: `${resourceNames.getResourceName('security-events-query')}`,
+      name: `apexshare-security-events-query-${config.env}`,
       queryString: `
         fields @timestamp, @message, eventType, severity, sourceIp
         | filter @message like /SecurityEvent/
         | sort @timestamp desc
         | limit 100
       `,
-      logGroupNames: [`/aws/security/${resourceNames.getResourceName('events')}`],
+      logGroupNames: [`/aws/security/apexshare-events-${config.env}`],
     });
   }
 
@@ -644,7 +643,7 @@ export class MonitoringStack extends cdk.Stack {
     crossStackRefs: CrossStackRefs
   ): lambda.Function {
     const customMetricsFunction = new lambda.Function(this, 'CustomMetricsFunction', {
-      functionName: `${resourceNames.getResourceName('custom-metrics')}`,
+      functionName: `apexshare-custom-metrics-${config.env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.ARM_64,
       handler: 'index.handler',
@@ -710,13 +709,13 @@ export class MonitoringStack extends cdk.Stack {
     resourceNames: ReturnType<typeof getResourceNames>
   ): string[] {
     return [
-      `/aws/apigateway/${resourceNames.getResourceName('api')}`,
-      `/aws/lambda/${resourceNames.getResourceName('upload-handler')}`,
-      `/aws/lambda/${resourceNames.getResourceName('download-handler')}`,
-      `/aws/lambda/${resourceNames.getResourceName('email-sender')}`,
-      `/aws/lambda/${resourceNames.getResourceName('custom-metrics')}`,
-      `/aws/cloudtrail/${resourceNames.getResourceName('cloudtrail')}`,
-      `/aws/security/${resourceNames.getResourceName('events')}`,
+      `/aws/apigateway/${resourceNames.restApi}`,
+      `/aws/lambda/${resourceNames.uploadHandler}`,
+      `/aws/lambda/${resourceNames.downloadHandler}`,
+      `/aws/lambda/${resourceNames.emailSender}`,
+      `/aws/lambda/apexshare-custom-metrics-${config.env}`,
+      `/aws/cloudtrail/apexshare-cloudtrail-${config.env}`,
+      `/aws/security/apexshare-events-${config.env}`,
       `/aws/ses/apexshare-bounces-${config.env}`,
       `/aws/ses/apexshare-complaints-${config.env}`,
     ];

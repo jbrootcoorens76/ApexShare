@@ -1,0 +1,45 @@
+{
+  "name": "apexshare-auth-handler",
+  "version": "1.0.0",
+  "description": "Authentication handler for ApexShare - handles login, logout, and user management",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "authentication",
+    "jwt",
+    "apexshare"
+  ],
+  "author": "ApexShare Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.57.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "*.js",
+      "!*.test.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 90,
+        "functions": 90,
+        "lines": 90,
+        "statements": 90
+      }
+    }
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

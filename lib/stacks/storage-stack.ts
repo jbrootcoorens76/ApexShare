@@ -30,13 +30,13 @@ export class StorageStack extends cdk.Stack {
   public readonly accessLogsBucket: s3.Bucket;
   public readonly templatesBucket: s3.Bucket;
   public readonly uploadsTable: dynamodb.Table;
-  public readonly s3EncryptionKey: kms.Key;
-  public readonly dynamoEncryptionKey: kms.Key;
+  public readonly s3EncryptionKey: kms.IKey;
+  public readonly dynamoEncryptionKey: kms.IKey;
 
   constructor(scope: Construct, id: string, props: ApexShareStackProps) {
     super(scope, id, props);
 
-    const { config } = props;
+    const { config, crossStackRefs } = props;
     const resourceNames = getResourceNames(config);
     const tags = resourceNames.getTags();
 
@@ -45,9 +45,24 @@ export class StorageStack extends cdk.Stack {
       cdk.Tags.of(this).add(key, value);
     });
 
-    // Create KMS encryption keys for enhanced security
-    this.s3EncryptionKey = this.createS3EncryptionKey(resourceNames);
-    this.dynamoEncryptionKey = this.createDynamoEncryptionKey(resourceNames);
+    // KMS keys must be provided by Security Stack for proper cross-stack architecture
+    if (!crossStackRefs?.securityStack?.kmsKeys) {
+      throw new Error(
+        'Storage Stack requires KMS keys from Security Stack. ' +
+        'Ensure Security Stack is deployed first and crossStackRefs are properly configured.'
+      );
+    }
+
+    // Use KMS encryption keys from Security Stack
+    this.s3EncryptionKey = crossStackRefs.securityStack.kmsKeys.s3;
+    this.dynamoEncryptionKey = crossStackRefs.securityStack.kmsKeys.dynamodb;
+
+    if (!this.s3EncryptionKey || !this.dynamoEncryptionKey) {
+      throw new Error(
+        'Missing required KMS keys from Security Stack. ' +
+        'Ensure Security Stack exports s3 and dynamodb encryption keys.'
+      );
+    }
 
     // Create S3 buckets
     this.accessLogsBucket = this.createAccessLogsBucket(resourceNames, config);
@@ -62,93 +77,9 @@ export class StorageStack extends cdk.Stack {
     this.createOutputs(resourceNames);
   }
 
-  /**
-   * Create KMS encryption key for S3 buckets
-   */
-  private createS3EncryptionKey(resourceNames: ReturnType<typeof getResourceNames>): kms.Key {
-    return new kms.Key(this, 'S3EncryptionKey', {
-      description: 'KMS key for S3 bucket encryption in ApexShare',
-      keySpec: kms.KeySpec.SYMMETRIC_DEFAULT,
-      keyUsage: kms.KeyUsage.ENCRYPT_DECRYPT,
-      enableKeyRotation: SECURITY_CONFIG.ENCRYPTION.KMS_KEY_ROTATION,
-      policy: new iam.PolicyDocument({
-        statements: [
-          // Root account permissions
-          new iam.PolicyStatement({
-            sid: 'EnableIAMUserPermissions',
-            effect: iam.Effect.ALLOW,
-            principals: [new iam.AccountRootPrincipal()],
-            actions: ['kms:*'],
-            resources: ['*'],
-          }),
-          // S3 service permissions
-          new iam.PolicyStatement({
-            sid: 'AllowS3Service',
-            effect: iam.Effect.ALLOW,
-            principals: [new iam.ServicePrincipal('s3.amazonaws.com')],
-            actions: [
-              'kms:Decrypt',
-              'kms:DescribeKey',
-              'kms:Encrypt',
-              'kms:GenerateDataKey',
-              'kms:ReEncrypt*',
-            ],
-            resources: ['*'],
-            conditions: {
-              StringEquals: {
-                'kms:ViaService': [`s3.${this.region}.amazonaws.com`],
-              },
-            },
-          }),
-        ],
-      }),
-      alias: resourceNames.s3Key,
-    });
-  }
-
-  /**
-   * Create KMS encryption key for DynamoDB table
-   */
-  private createDynamoEncryptionKey(resourceNames: ReturnType<typeof getResourceNames>): kms.Key {
-    return new kms.Key(this, 'DynamoEncryptionKey', {
-      description: 'KMS key for DynamoDB encryption in ApexShare',
-      keySpec: kms.KeySpec.SYMMETRIC_DEFAULT,
-      keyUsage: kms.KeyUsage.ENCRYPT_DECRYPT,
-      enableKeyRotation: SECURITY_CONFIG.ENCRYPTION.KMS_KEY_ROTATION,
-      policy: new iam.PolicyDocument({
-        statements: [
-          // Root account permissions
-          new iam.PolicyStatement({
-            sid: 'EnableIAMUserPermissions',
-            effect: iam.Effect.ALLOW,
-            principals: [new iam.AccountRootPrincipal()],
-            actions: ['kms:*'],
-            resources: ['*'],
-          }),
-          // DynamoDB service permissions
-          new iam.PolicyStatement({
-            sid: 'AllowDynamoDBService',
-            effect: iam.Effect.ALLOW,
-            principals: [new iam.ServicePrincipal('dynamodb.amazonaws.com')],
-            actions: [
-              'kms:Decrypt',
-              'kms:DescribeKey',
-              'kms:Encrypt',
-              'kms:GenerateDataKey',
-              'kms:ReEncrypt*',
-            ],
-            resources: ['*'],
-            conditions: {
-              StringEquals: {
-                'kms:ViaService': [`dynamodb.${this.region}.amazonaws.com`],
-              },
-            },
-          }),
-        ],
-      }),
-      alias: resourceNames.dynamoKey,
-    });
-  }
+  // NOTE: KMS key creation methods removed - Storage Stack now uses
+  // keys from Security Stack via cross-stack references to prevent
+  // duplicate key aliases and improve security architecture
 
   /**
    * Create S3 bucket for access logs
@@ -229,7 +160,8 @@ export class StorageStack extends cdk.Stack {
               transitionAfter: cdk.Duration.days(S3_CONFIG.LIFECYCLE.TRANSITION_TO_GLACIER_DAYS),
             },
           ],
-          expiration: cdk.Duration.days(config.retentionDays),
+          // Ensure expiration is at least 1 day after Glacier transition
+          expiration: cdk.Duration.days(Math.max(config.retentionDays, S3_CONFIG.LIFECYCLE.TRANSITION_TO_GLACIER_DAYS + 1)),
         },
         // Temporary uploads cleanup
         {
@@ -253,12 +185,12 @@ export class StorageStack extends cdk.Stack {
           maxAge: S3_CONFIG.CORS.MAX_AGE,
         },
       ],
-      notificationsHandlerRole: new iam.Role(this, 'S3NotificationsRole', {
-        assumedBy: new iam.ServicePrincipal('s3.amazonaws.com'),
-        managedPolicies: [
-          iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSS3NotificationRolePolicy'),
-        ],
-      }),
+      // notificationsHandlerRole: new iam.Role(this, 'S3NotificationsRole', {
+      //   assumedBy: new iam.ServicePrincipal('s3.amazonaws.com'),
+      //   managedPolicies: [
+      //     iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSS3NotificationRolePolicy'),
+      //   ],
+      // }),
     });
 
     // Add bucket policy for enhanced security
