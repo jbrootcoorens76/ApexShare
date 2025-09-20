@@ -54,7 +54,7 @@ const environmentConfigs: Record<string, Partial<AppConfig>> = {
   },
   production: {
     apiBaseUrl: 'https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1',
-    enableDetailedLogging: false,
+    enableDetailedLogging: true, // Temporarily enable for debugging
     enableAnalytics: true,
   },
 }

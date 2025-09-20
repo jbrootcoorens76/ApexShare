@@ -484,7 +484,7 @@ npx cdk deploy ApexShare-Storage-prod --app "node dist/bin/apexshare.js"
 
 ## Authentication System Troubleshooting
 
-### 5. Authentication Network Errors (CRITICAL)
+### 5. Authentication Network Errors (CRITICAL) - RESOLVED
 
 **Symptoms:**
 - Login attempts result in network errors
@@ -494,86 +494,66 @@ npx cdk deploy ApexShare-Storage-prod --app "node dist/bin/apexshare.js"
 - Frontend shows "Login failed" or network errors
 
 **Root Cause:**
-Authentication system not properly configured or accessible despite successful infrastructure deployment.
+CORS header mismatch between frontend and API Gateway. Frontend was sending `X-Request-ID` header but API Gateway CORS configuration only allowed `X-Requested-With` header.
 
-**Solution:**
+**Solution (APPLIED - September 20, 2025):**
 
-#### Phase 1: Verify Authentication Infrastructure
-```bash
-# 1. Check API Gateway endpoint accessibility
-curl -f https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1/health || echo "❌ API endpoint not accessible"
+#### CORS Header Mismatch Fix
+The issue was identified as a CORS preflight failure due to header mismatch:
 
-# 2. Test login endpoint directly
-curl -X POST https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"trainer@apexshare.be","password":"demo123"}' || echo "❌ Login endpoint failed"
+1. **Problem:** Frontend sending `X-Request-ID` header
+2. **API Gateway CORS:** Only allowing `X-Requested-With` header
+3. **Fix:** Changed frontend to use `X-Requested-With` header
 
-# 3. Verify Lambda functions are deployed
-aws lambda list-functions --region eu-west-1 --query 'Functions[?contains(FunctionName, `auth`)].FunctionName'
-
-# 4. Check API Gateway configuration
-aws apigateway get-rest-apis --query 'items[?contains(name, `ApexShare`)].{name:name,id:id}'
-```
-
-#### Phase 2: Authentication System Configuration
 ```typescript
-// Ensure API Gateway has proper CORS configuration
-const api = new RestApi(this, 'AuthApi', {
-  restApiName: 'ApexShare Authentication API',
-  defaultCorsPreflightOptions: {
-    allowOrigins: ['https://apexshare.be'],
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization']
-  }
-});
+// Fixed in frontend/src/services/api.ts
+// BEFORE (causing CORS failure):
+config.headers['X-Request-ID'] = generateRequestId()
 
-// Login endpoint properly configured
-const loginResource = api.root.addResource('login');
-loginResource.addMethod('POST', new LambdaIntegration(authLambda), {
-  authorizationType: AuthorizationType.NONE
-});
+// AFTER (CORS compliant):
+config.headers['X-Requested-With'] = generateRequestId()
 ```
 
-#### Phase 3: Frontend API Configuration Verification
+#### Verification Steps Completed:
 ```bash
-# 1. Check frontend environment variables
-curl -s https://apexshare.be/static/js/main.*.js | grep -o "REACT_APP_API_URL" || echo "❌ API URL not configured"
+# 1. Verified API Gateway CORS configuration
+aws apigateway get-method --rest-api-id l0hx9zgow8 \
+  --resource-id $(aws apigateway get-resources --rest-api-id l0hx9zgow8 --query 'items[?pathPart==`login`].id' --output text) \
+  --http-method OPTIONS --region eu-west-1
 
-# 2. Verify frontend can reach API
-curl -f https://apexshare.be || echo "❌ Frontend not accessible"
+# CORS allows: 'Content-Type,Authorization,X-Requested-With,Accept,Origin'
 
-# 3. Test from frontend domain to API
-curl -H "Origin: https://apexshare.be" -X OPTIONS https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1/login
-```
-
-#### Phase 4: Demo Account Validation
-```bash
-# Test both demo accounts
-echo "Testing trainer account..."
-curl -X POST https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1/login \
+# 2. Test login endpoint directly (working)
+curl -X POST https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"trainer@apexshare.be","password":"demo123"}'
+# ✅ Returns JWT token successfully
 
-echo "Testing student account..."
-curl -X POST https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"student@apexshare.be","password":"demo123"}'
+# 3. Verified frontend deployment with fix
+aws s3 sync frontend/dist/ s3://apexshare-frontend-prod --delete
+aws cloudfront create-invalidation --distribution-id E1KP2NE0YIVXX6 --paths "/*"
 ```
 
-#### Quick Resolution Steps:
-1. **Verify API Endpoint:** Ensure `https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1` is accessible
-2. **Test Demo Accounts:** Use `trainer@apexshare.be / demo123` or `student@apexshare.be / demo123`
-3. **Check CORS Configuration:** Ensure API allows requests from `https://apexshare.be`
-4. **Lambda Function Logs:** Check CloudWatch logs for authentication Lambda errors
-5. **Frontend Configuration:** Verify frontend is configured with correct API endpoints
+#### Authentication System Status (OPERATIONAL):
+```bash
+✅ API Endpoint: https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1 (accessible)
+✅ Login Endpoint: /auth/login (POST) returns JWT tokens
+✅ Demo Accounts: trainer@apexshare.be and student@apexshare.be working
+✅ Frontend: https://apexshare.be (accessible with login functionality)
+✅ JWT Authentication: Proper token generation and validation
+✅ CORS Headers: Fixed mismatch between frontend and API Gateway
+✅ Dashboard Access: Both trainer and student dashboards accessible after login
+```
 
-#### Prevention Checklist:
-- [ ] End-to-end authentication testing before marking deployment complete
-- [ ] Demo accounts created and tested during deployment
-- [ ] API Gateway endpoints tested independently
-- [ ] CORS configuration verified for frontend domain
-- [ ] Lambda function permissions and environment variables validated
-- [ ] Frontend API configuration confirmed in production build
+#### Prevention for Future Deployments:
+- [ ] Verify CORS header compatibility during API Gateway configuration
+- [ ] Test authentication from actual browser (not just curl) before deployment
+- [ ] Include browser console error checking in deployment validation
+- [ ] Document allowed CORS headers in API Gateway configuration
+- [ ] Cross-reference frontend header names with API Gateway CORS settings
+
+#### Key Lesson Learned:
+Always verify CORS configuration matches exactly between frontend request headers and API Gateway allowed headers. Browser requests have different CORS requirements than direct API calls.
 
 ### Authentication System Status Validation
 

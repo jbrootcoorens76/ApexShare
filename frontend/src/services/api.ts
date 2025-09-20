@@ -53,7 +53,7 @@ const createApiClient = (): AxiosInstance => {
   client.interceptors.request.use(
     (config) => {
       // Add request ID for tracking
-      config.headers['X-Request-ID'] = generateRequestId()
+      config.headers['X-Requested-With'] = generateRequestId()
 
       // Add authentication token if available
       const token = getAuthToken()
@@ -123,7 +123,7 @@ const handleApiError = (error: AxiosError): ApiError => {
       data?.error?.code || `HTTP_${response.status}`,
       data?.error?.message || data?.message || `Request failed with status ${response.status}`,
       data?.error?.details || data?.details,
-      data?.requestId || response.headers['x-request-id']
+      data?.requestId || response.headers['x-requested-with']
     )
   } else if (request) {
     // Request was made but no response received

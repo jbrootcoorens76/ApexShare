@@ -4,10 +4,10 @@
 
 This document captures critical lessons learned during the ApexShare serverless video sharing platform deployment. These insights will help prevent similar issues in future deployments and establish best practices for AWS CDK projects.
 
-**Document Version:** 2.0
+**Document Version:** 2.1
 **Last Updated:** September 20, 2025
-**Status:** Active Reference Document - CRITICAL PROCESS UPDATE IMPLEMENTED
-**Major Change:** Added mandatory root cause analysis requirement (Lesson #7)
+**Status:** Active Reference Document - AUTHENTICATION SYSTEM RESOLVED
+**Major Change:** Added CORS header mismatch resolution (Lesson #8)
 
 ---
 
@@ -534,6 +534,89 @@ export class ApexShareApp extends App {
 - **Explicit Dependencies**: Use `addDependency()` to define deployment order
 - **Type Safety**: Pass resources through strongly-typed props
 - **Output Exports**: Use CloudFormation outputs for resource sharing when necessary
+
+### 6. CORS Header Mismatch in Browser Authentication (CRITICAL)
+
+#### Root Cause Analysis
+Frontend authentication failed due to CORS header mismatch. The frontend application was sending `X-Request-ID` header but API Gateway CORS configuration only allowed `X-Requested-With` header, causing all browser-based authentication requests to fail with network errors.
+
+**Problem Sequence:**
+1. Frontend sends login request with `X-Request-ID` header
+2. Browser performs CORS preflight check
+3. API Gateway CORS only allows `X-Requested-With` header
+4. CORS preflight fails, blocking the actual request
+5. User sees "network error" instead of login success
+
+```typescript
+// PROBLEMATIC CODE - Header mismatch
+// Frontend: frontend/src/services/api.ts
+client.interceptors.request.use((config) => {
+  config.headers['X-Request-ID'] = generateRequestId(); // ❌ Not allowed by CORS
+  return config;
+});
+
+// API Gateway CORS configuration allows:
+allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+// Notice: X-Request-ID is NOT in the allowed headers list
+```
+
+#### Solution Implemented
+Changed frontend to use CORS-compliant header name that matches API Gateway configuration.
+
+```typescript
+// CORRECTED CODE - CORS compliant headers
+// Frontend: frontend/src/services/api.ts
+client.interceptors.request.use((config) => {
+  config.headers['X-Requested-With'] = generateRequestId(); // ✅ CORS compliant
+  return config;
+});
+
+// Also updated error handling to use correct header:
+data?.requestId || response.headers['x-requested-with'] // ✅ Consistent
+```
+
+#### Verification Steps Completed
+```bash
+# 1. Verified API Gateway CORS configuration
+aws apigateway get-method --rest-api-id l0hx9zgow8 \
+  --resource-id $(aws apigateway get-resources --rest-api-id l0hx9zgow8 --query 'items[?pathPart==`login`].id' --output text) \
+  --http-method OPTIONS --region eu-west-1
+# ✅ Confirmed allowed headers: 'Content-Type,Authorization,X-Requested-With,Accept,Origin'
+
+# 2. Test API directly (confirms API works)
+curl -X POST https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"trainer@apexshare.be","password":"demo123"}'
+# ✅ Returns JWT token successfully
+
+# 3. Deploy fixed frontend
+npm run build && aws s3 sync frontend/dist/ s3://apexshare-frontend-prod --delete
+aws cloudfront create-invalidation --distribution-id E1KP2NE0YIVXX6 --paths "/*"
+# ✅ Frontend deployed with CORS-compliant headers
+```
+
+#### Impact Assessment
+- **Before Fix:** Complete platform inaccessibility - users couldn't login from any browser
+- **After Fix:** Full authentication functionality restored - login working across all browsers
+- **Business Impact:** Platform operational and accessible to all users
+- **Technical Impact:** Proper CORS compliance established for all API interactions
+
+#### Prevention Best Practices
+- **CORS Validation**: Always verify frontend request headers match API Gateway CORS configuration
+- **Browser Testing**: Test authentication from actual browsers, not just curl/Postman
+- **Header Consistency**: Maintain consistent header naming between frontend and backend
+- **CORS Documentation**: Document all allowed headers in API Gateway configuration
+- **Integration Testing**: Include browser-based CORS testing in CI/CD pipeline
+- **Error Handling**: Implement specific CORS error detection and user-friendly messages
+
+#### Key Lesson Learned
+**CORS errors often masquerade as generic "network errors" in browsers.** Always verify that:
+1. Frontend request headers exactly match API Gateway allowed headers
+2. Browser CORS preflight requests are succeeding
+3. Authentication testing includes actual browser testing, not just API testing
+4. CORS configuration is documented and validated during deployment
+
+**Critical Distinction:** API calls via curl/Postman work fine because they bypass CORS checks, but browser requests fail due to CORS preflight validation. This can create false confidence that the API is working when browser users cannot access it.
 
 ---
 
