@@ -9,6 +9,15 @@
     "test": "jest",
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
+    "test:e2e": "cypress run",
+    "test:e2e:open": "cypress open",
+    "test:performance": "cd tests/performance && artillery run artillery-config.yml",
+    "test:security": "cd tests/security && node security-test-suite.js",
+    "test:security:zap": "cd tests/security && python zap-security-scan.py",
+    "test:all": "./scripts/run-tests.sh --all",
+    "test:quick": "./scripts/run-tests.sh --unit --integration",
+    "test:ci": "./scripts/run-tests.sh --all --ci",
+    "test:coverage": "jest --coverage",
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "eslint . --ext .ts,.js --fix",
     "clean": "rm -rf dist lib/**/*.js lib/**/*.d.ts",
@@ -71,7 +80,11 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.3"
+    "typescript": "^5.4.3",
+    "cypress": "^13.6.2",
+    "@cypress/code-coverage": "^3.12.18",
+    "artillery": "^2.0.4",
+    "axios": "^1.6.2"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.137.0",

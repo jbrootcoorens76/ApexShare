@@ -1,0 +1,152 @@
+# Artillery Load Testing Configuration for ApexShare
+config:
+  target: 'https://api.apexshare.be'
+  phases:
+    - duration: 60
+      arrivalRate: 1
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 5
+      rampTo: 20
+      name: "Ramp up load"
+    - duration: 300
+      arrivalRate: 20
+      name: "Sustained load"
+    - duration: 60
+      arrivalRate: 20
+      rampTo: 0
+      name: "Ramp down"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+      User-Agent: 'Artillery Load Test'
+  variables:
+    testEmail: 'load-test-{{ $randomString() }}@apexshare.be'
+    sessionDate: '2025-01-20'
+    fileName: 'load-test-video-{{ $randomString() }}.mp4'
+    fileSize: '{{ $randomInt(1048576, 104857600) }}' # 1MB to 100MB
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+    publish-metrics:
+      - type: cloudwatch
+        region: us-east-1
+        namespace: 'ApexShare/LoadTest'
+  processor: './performance-utils.js'
+  environments:
+    staging:
+      target: 'https://staging-api.apexshare.be'
+    production:
+      target: 'https://api.apexshare.be'
+      phases:
+        - duration: 30
+          arrivalRate: 1
+          name: "Production warm up"
+        - duration: 60
+          arrivalRate: 2
+          rampTo: 5
+          name: "Production ramp up"
+        - duration: 120
+          arrivalRate: 5
+          name: "Production sustained"
+
+scenarios:
+  - name: "Upload Video Request"
+    weight: 70
+    flow:
+      - post:
+          url: "/upload"
+          name: "Create Upload Request"
+          headers:
+            Content-Type: 'application/json'
+          json:
+            studentEmail: "{{ testEmail }}"
+            studentName: "Load Test Student {{ $randomString() }}"
+            trainerName: "Load Test Trainer {{ $randomString() }}"
+            sessionDate: "{{ sessionDate }}"
+            notes: "Load testing session {{ $timestamp }}"
+            fileName: "{{ fileName }}"
+            fileSize: "{{ fileSize }}"
+            contentType: "video/mp4"
+          capture:
+            - json: "$.data.fileId"
+              as: "fileId"
+            - json: "$.data.uploadUrl"
+              as: "uploadUrl"
+          expect:
+            - statusCode: 200
+            - hasProperty: "data.fileId"
+            - hasProperty: "data.uploadUrl"
+      - think: 1
+      - function: "logUploadMetrics"
+
+  - name: "Download Video Request"
+    weight: 20
+    flow:
+      - get:
+          url: "/download/{{ $randomFileId() }}"
+          name: "Request Download"
+          expect:
+            - statusCode: [200, 404, 410]
+      - think: 2
+      - function: "logDownloadMetrics"
+
+  - name: "Invalid Requests"
+    weight: 10
+    flow:
+      - post:
+          url: "/upload"
+          name: "Invalid Upload Request"
+          json:
+            studentEmail: "invalid-email"
+            fileName: "test.txt"
+            fileSize: "999999999999"
+            contentType: "text/plain"
+            sessionDate: "invalid-date"
+          expect:
+            - statusCode: 400
+      - get:
+          url: "/download/invalid-uuid"
+          name: "Invalid Download Request"
+          expect:
+            - statusCode: 400
+      - function: "logErrorMetrics"
+
+  - name: "CORS Preflight"
+    weight: 5
+    flow:
+      - options:
+          url: "/upload"
+          name: "CORS Preflight Upload"
+          headers:
+            Origin: 'https://apexshare.be'
+            Access-Control-Request-Method: 'POST'
+            Access-Control-Request-Headers: 'Content-Type'
+          expect:
+            - statusCode: 200
+            - hasHeader: "access-control-allow-origin"
+      - options:
+          url: "/download/test-id"
+          name: "CORS Preflight Download"
+          headers:
+            Origin: 'https://apexshare.be'
+            Access-Control-Request-Method: 'GET'
+          expect:
+            - statusCode: 200
+
+# Performance thresholds
+expect:
+  - statusCode: [200, 400, 404, 410, 429]
+  - responsetime: 5000  # 5 seconds max response time
+  - availabilityPct: 99.5  # 99.5% availability
+
+# Custom metrics collection
+metrics:
+  - name: "response_time_p95"
+    unit: "ms"
+  - name: "response_time_p99"
+    unit: "ms"
+  - name: "error_rate"
+    unit: "percent"
+  - name: "throughput"
+    unit: "req/sec"
