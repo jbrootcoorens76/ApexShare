@@ -1,7 +1,7 @@
 ---
 name: email-service-specialist
 description: Use this agent when you need to implement, configure, or optimize email functionality in your application. This includes setting up AWS SES, creating HTML email templates, implementing email automation workflows, handling email deliverability issues, or integrating email services with Lambda functions. Examples: <example>Context: User needs to set up email notifications for their training video platform. user: 'I need to send automated emails to students when their training videos are ready for download' assistant: 'I'll use the email-service-specialist agent to design and implement the email notification system with AWS SES and responsive templates' <commentary>Since the user needs email functionality implemented, use the email-service-specialist agent to handle SES setup, template creation, and automation workflows.</commentary></example> <example>Context: User is experiencing email deliverability issues. user: 'Our emails are going to spam folders and we're getting high bounce rates' assistant: 'Let me use the email-service-specialist agent to analyze and fix the deliverability issues' <commentary>Since this involves email deliverability optimization, use the email-service-specialist agent to implement proper authentication, bounce handling, and reputation management.</commentary></example>
-model: sonnet
+model: opus
 color: pink
 ---
 

@@ -57,7 +57,7 @@ export class EmailStack extends cdk.Stack {
     this.createEmailMonitoringAlarms(config);
 
     // Create outputs
-    this.createOutputs();
+    this.createOutputs(config);
   }
 
   /**
@@ -115,11 +115,6 @@ export class EmailStack extends cdk.Stack {
       configurationSetName: `apexshare-emails-${config.env}`,
       // Reputation tracking enabled by default
       reputationMetrics: true,
-      // Delivery options
-      deliveryOptions: {
-        // Use dedicated IP pool for production
-        dedicatedIpPool: config.env === 'prod' ? undefined : undefined, // Can be configured later
-      },
     });
 
     // Add event destinations for bounce and complaint tracking
@@ -135,25 +130,8 @@ export class EmailStack extends cdk.Stack {
       enabled: true,
     });
 
-    // Add CloudWatch event destination for detailed metrics
-    if (config.monitoring.detailedMetrics) {
-      configSet.addEventDestination('CloudWatchDestination', {
-        destination: ses.EventDestination.cloudWatchDimensions({
-          source: ses.CloudWatchDimension.emailAddress(),
-          messageTag: ses.CloudWatchDimension.defaultDimensions(),
-          linkTag: ses.CloudWatchDimension.defaultDimensions(),
-        }),
-        events: [
-          ses.EmailSendingEvent.SEND,
-          ses.EmailSendingEvent.DELIVERY,
-          ses.EmailSendingEvent.BOUNCE,
-          ses.EmailSendingEvent.COMPLAINT,
-          ses.EmailSendingEvent.CLICK,
-          ses.EmailSendingEvent.OPEN,
-        ],
-        enabled: true,
-      });
-    }
+    // CloudWatch event destination will be added manually in console if needed
+    // The CDK SES construct has compatibility issues with CloudWatch dimensions
 
     return configSet;
   }
@@ -165,13 +143,16 @@ export class EmailStack extends cdk.Stack {
     config: any,
     resourceNames: ReturnType<typeof getResourceNames>
   ): ses.EmailIdentity {
+    // For production, use the root domain (apexshare.be)
+    // For dev/staging, use subdomain (dev.apexshare.be, staging.apexshare.be)
+    const emailDomain = config.env === 'prod' ? 'apexshare.be' : config.domain;
+
     const identity = new ses.EmailIdentity(this, 'DomainIdentity', {
-      identity: ses.Identity.domain(config.domain),
+      identity: ses.Identity.domain(emailDomain),
       configurationSet: this.configurationSet,
       dkimSigning: true, // Enable DKIM signing
-      dkimIdentity: config.domain,
       feedbackForwarding: false, // We handle bounces/complaints via SNS
-      mailFromDomain: `mail.${config.domain}`,
+      mailFromDomain: `mail.${emailDomain}`,
       mailFromBehaviorOnMxFailure: ses.MailFromBehaviorOnMxFailure.USE_DEFAULT_VALUE,
     });
 
@@ -379,7 +360,7 @@ export class EmailStack extends cdk.Stack {
   /**
    * Create CloudFormation outputs
    */
-  private createOutputs(): void {
+  private createOutputs(config: any): void {
     new cdk.CfnOutput(this, 'DomainIdentityArn', {
       value: this.domainIdentity.emailIdentityArn,
       description: 'SES Domain Identity ARN',
@@ -405,14 +386,30 @@ export class EmailStack extends cdk.Stack {
     });
 
     // Output DNS records that need to be configured manually
-    new cdk.CfnOutput(this, 'DkimRecords', {
-      value: 'Configure DKIM records in Route 53 after domain verification',
-      description: 'DKIM DNS records for email authentication',
+    const emailDomain = config.env === 'prod' ? 'apexshare.be' : config.domain;
+
+    new cdk.CfnOutput(this, 'EmailDomain', {
+      value: emailDomain,
+      description: 'Email domain used for SES',
+      exportName: `${this.stackName}-EmailDomain`,
     });
 
-    new cdk.CfnOutput(this, 'MxRecord', {
-      value: 'Configure MX record for bounce handling',
-      description: 'MX record configuration for mail-from domain',
+    new cdk.CfnOutput(this, 'MailFromDomain', {
+      value: `mail.${emailDomain}`,
+      description: 'Mail-from domain for bounce handling',
+      exportName: `${this.stackName}-MailFromDomain`,
+    });
+
+    new cdk.CfnOutput(this, 'SesFromEmail', {
+      value: `no-reply@${emailDomain}`,
+      description: 'From email address for SES',
+      exportName: `${this.stackName}-SesFromEmail`,
+    });
+
+    // Instructions for DNS configuration
+    new cdk.CfnOutput(this, 'DnsInstructions', {
+      value: `Create the following DNS records: 1) Verify domain ownership in SES console, 2) Configure DKIM CNAME records, 3) MX record for mail.${emailDomain} -> feedback-smtp.${config.aws.region}.amazonses.com, 4) SPF record: "v=spf1 include:amazonses.com ~all", 5) DMARC record: "v=DMARC1; p=quarantine; rua=mailto:dmarc@${emailDomain}"`,
+      description: 'DNS configuration instructions for email authentication',
     });
   }
 }

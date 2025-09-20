@@ -12,8 +12,8 @@ import { StorageStack } from '../lib/stacks/storage-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { DnsStack } from '../lib/stacks/dns-stack';
 import { ApiStack } from '../lib/stacks/api-stack';
+import { EmailStack } from '../lib/stacks/email-stack';
 // import { FrontendStack } from '../lib/stacks/frontend-stack';
-// import { EmailStack } from '../lib/stacks/email-stack';
 // import { MonitoringStack } from '../lib/stacks/monitoring-stack';
 import { getEnvironmentConfig, validateEnvironmentConfig } from '../lib/shared/config';
 import { CrossStackRefs } from '../lib/shared/types';
@@ -116,9 +116,9 @@ crossStackRefs.apiStack = {
 //   crossStackRefs,
 // });
 
-// 6. Email Stack (SES) - Temporarily disabled for compilation
-// console.log('📦 Creating Email Stack...');
-// const emailStack = new EmailStack(app, `ApexShare-Email-${config.env}`, stackProps);
+// 6. Email Stack (SES)
+console.log('📦 Creating Email Stack...');
+const emailStack = new EmailStack(app, `ApexShare-Email-${config.env}`, stackProps);
 
 // 7. Monitoring Stack (CloudWatch, Alarms) - Temporarily disabled for compilation
 // console.log('📦 Creating Monitoring Stack...');
@@ -144,7 +144,7 @@ apiStack.addDependency(securityStack);
 // frontendStack.addDependency(securityStack);
 
 // Email stack depends on DNS stack for domain verification
-// emailStack.addDependency(dnsStack);
+emailStack.addDependency(dnsStack);
 
 // Monitoring stack depends on all other stacks for complete visibility
 // monitoringStack.addDependency(securityStack);

@@ -1,7 +1,7 @@
 ---
 name: frontend-developer
 description: Use this agent when you need to develop, modify, or enhance frontend web applications, particularly those involving file uploads, AWS S3 integration, responsive design, or React/JavaScript development. Examples: <example>Context: User needs to build a file upload interface for their web application. user: 'I need to create a drag-and-drop file upload component that uploads directly to S3' assistant: 'I'll use the frontend-developer agent to create a comprehensive upload component with S3 integration' <commentary>The user needs frontend development work involving S3 uploads, which is exactly what the frontend-developer agent specializes in.</commentary></example> <example>Context: User wants to make their existing web app mobile-responsive. user: 'My dashboard looks terrible on mobile devices, can you help fix the responsive design?' assistant: 'Let me use the frontend-developer agent to analyze and improve the mobile responsiveness of your dashboard' <commentary>This requires frontend expertise in responsive design, which the frontend-developer agent handles.</commentary></example> <example>Context: User needs to integrate AWS services into their frontend. user: 'I need to implement presigned URL uploads and progress tracking in my React app' assistant: 'I'll use the frontend-developer agent to implement the AWS SDK integration and upload progress features' <commentary>This involves AWS frontend integration, which is a core specialty of the frontend-developer agent.</commentary></example>
-model: sonnet
+model: opus
 color: purple
 ---
 
