@@ -1,0 +1,23 @@
+{
+  "name": "apexshare-upload-handler",
+  "version": "1.0.0",
+  "description": "Lambda function to handle video upload initiation for ApexShare",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.540.0",
+    "@aws-sdk/client-dynamodb": "^3.540.0",
+    "@aws-sdk/s3-request-presigner": "^3.540.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.138",
+    "@types/node": "^20.11.30",
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.4.3"
+  }
+}

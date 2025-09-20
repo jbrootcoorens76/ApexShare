@@ -8,6 +8,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Construct } from 'constructs';
 import { EnvironmentConfig } from '../shared/config';
 
@@ -442,7 +443,7 @@ export class CostForecastingConstruct extends Construct {
     });
 
     accuracyAlarm.addAlarmAction(
-      new cdk.aws_cloudwatch_actions.SnsAction(props.alertTopic)
+      new cloudwatchActions.SnsAction(props.alertTopic)
     );
 
     // Budget variance alarm
@@ -460,11 +461,11 @@ export class CostForecastingConstruct extends Construct {
       threshold: 0.25, // 25% variance threshold
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
       evaluationPeriods: 1,
-      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING
-    );
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
 
     budgetVarianceAlarm.addAlarmAction(
-      new cdk.aws_cloudwatch_actions.SnsAction(props.alertTopic)
+      new cloudwatchActions.SnsAction(props.alertTopic)
     );
   }
 

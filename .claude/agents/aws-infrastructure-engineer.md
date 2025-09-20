@@ -1,7 +1,7 @@
 ---
 name: aws-infrastructure-engineer
 description: Use this agent when you need to implement AWS infrastructure as code using CDK, set up multi-environment deployments, configure AWS services, or manage production-ready cloud infrastructure. Examples: <example>Context: User has received architecture specifications and needs to implement the infrastructure. user: 'I have the architecture design from the solutions architect. Can you implement the CDK infrastructure for our web application with S3, Lambda, API Gateway, and DynamoDB across dev, staging, and prod environments?' assistant: 'I'll use the aws-infrastructure-engineer agent to implement the complete CDK infrastructure with proper environment configurations, security policies, and deployment pipelines.' <commentary>The user needs comprehensive AWS infrastructure implementation, which is exactly what this agent specializes in.</commentary></example> <example>Context: User needs to troubleshoot deployment issues or optimize existing infrastructure. user: 'Our CDK deployment is failing in the staging environment and we're getting IAM permission errors' assistant: 'Let me use the aws-infrastructure-engineer agent to diagnose the deployment issues and fix the IAM configurations.' <commentary>Infrastructure deployment troubleshooting requires the specialized knowledge of this DevOps-focused agent.</commentary></example>
-model: sonnet
+model: opus
 color: orange
 ---
 

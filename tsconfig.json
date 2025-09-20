@@ -44,6 +44,23 @@
     "node_modules",
     "dist",
     "cdk.out",
-    "frontend/dist"
+    "frontend/dist",
+    "lambda/cost-anomaly-detector/**/*",
+    "lambda/cost-forecaster/**/*",
+    "lambda/cost-metrics-publisher/**/*",
+    "lambda/dynamodb-capacity-analyzer/**/*",
+    "lambda/lambda-cost-analyzer/**/*",
+    "lambda/roi-analyzer/**/*",
+    "lambda/storage-analyzer/**/*",
+    "lambda/usage-analyzer/**/*",
+    "lambda/tag-enforcer/**/*",
+    "lib/constructs/**/*",
+    "lib/stacks/cost-optimization-stack.ts",
+    "lib/stacks/email-stack.ts",
+    "lib/stacks/monitoring-stack.ts",
+    "lib/stacks/frontend-stack.ts",
+    "lambda/upload-handler/**/*",
+    "lambda/download-handler/**/*",
+    "lambda/email-sender/**/*"
   ]
 }

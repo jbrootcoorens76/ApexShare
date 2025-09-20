@@ -1,0 +1,21 @@
+{
+  "name": "apexshare-email-sender",
+  "version": "1.0.0",
+  "description": "Lambda function to send email notifications for ApexShare",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.540.0",
+    "@aws-sdk/client-dynamodb": "^3.540.0",
+    "@aws-sdk/client-s3": "^3.540.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.138",
+    "@types/node": "^20.11.30",
+    "typescript": "^5.4.3"
+  }
+}
