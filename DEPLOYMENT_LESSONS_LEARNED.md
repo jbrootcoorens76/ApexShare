@@ -4,10 +4,10 @@
 
 This document captures critical lessons learned during the ApexShare serverless video sharing platform deployment. These insights will help prevent similar issues in future deployments and establish best practices for AWS CDK projects.
 
-**Document Version:** 2.1
+**Document Version:** 2.2
 **Last Updated:** September 20, 2025
-**Status:** Active Reference Document - AUTHENTICATION SYSTEM RESOLVED
-**Major Change:** Added CORS header mismatch resolution (Lesson #8)
+**Status:** Active Reference Document - API ENDPOINT GAP DISCOVERED
+**Major Change:** Added missing API endpoints discovery (Lesson #7)
 
 ---
 
@@ -617,6 +617,96 @@ aws cloudfront create-invalidation --distribution-id E1KP2NE0YIVXX6 --paths "/*"
 4. CORS configuration is documented and validated during deployment
 
 **Critical Distinction:** API calls via curl/Postman work fine because they bypass CORS checks, but browser requests fail due to CORS preflight validation. This can create false confidence that the API is working when browser users cannot access it.
+
+### 7. Incomplete API Implementation vs Frontend Expectations (CRITICAL)
+
+#### Root Cause Analysis
+Frontend application was built expecting full API coverage including session management and analytics endpoints, but the API stack implementation was incomplete, containing only authentication and basic file handling endpoints.
+
+**Problem Sequence:**
+1. Frontend developed with complete API service layer expecting sessions and analytics
+2. API stack implemented with only core upload/download functionality
+3. Frontend deployed successfully but fails at runtime when calling missing endpoints
+4. Missing endpoints return "Missing Authentication Token" (404-like response)
+5. Users experience "network errors" on dashboard functionality
+
+**Discovery Process:**
+```bash
+# What appeared to be CORS errors were actually missing endpoints:
+curl -X GET https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1/sessions?limit=5
+# Returns: {"message":"Missing Authentication Token"}
+
+# Verification showed limited API Gateway resources:
+aws apigateway get-resources --rest-api-id l0hx9zgow8 --region eu-west-1
+# Only shows: health, auth, uploads, downloads - missing sessions, analytics
+```
+
+#### API Coverage Gap Analysis
+```typescript
+// IMPLEMENTED IN API GATEWAY:
+✅ GET /health                     // Health check
+✅ POST /auth/login               // Authentication
+✅ GET /auth/me                   // Current user
+✅ POST /auth/logout              // Logout
+✅ POST /uploads/initiate         // File upload
+✅ GET /uploads/recent            // Recent uploads (basic)
+✅ GET /downloads/{fileId}        // File download
+
+// MISSING FROM API GATEWAY (but expected by frontend):
+❌ GET /sessions                  // Session list for dashboards
+❌ POST /sessions                 // Create training session
+❌ GET /sessions/{id}             // Get specific session
+❌ PUT /sessions/{id}             // Update session
+❌ DELETE /sessions/{id}          // Delete session
+❌ GET /analytics/usage           // Usage metrics
+❌ POST /analytics/events         // Event tracking
+```
+
+#### Impact Assessment
+- **User Experience:** Dashboard pages fail to load with "network errors"
+- **System Functionality:** Core session management and analytics non-functional
+- **Business Impact:** Platform appears broken to users trying to access dashboards
+- **Development Impact:** False assumption that API was complete based on authentication working
+
+#### Solution Implementation Required
+1. **Sessions Handler Lambda**: Implement full CRUD operations for training sessions
+   ```typescript
+   // Required endpoints:
+   // GET /sessions - list sessions with filtering/pagination
+   // POST /sessions - create new session
+   // GET /sessions/{id} - get session details
+   // PUT /sessions/{id} - update session
+   // DELETE /sessions/{id} - delete session
+   ```
+
+2. **Analytics Handler Lambda**: Implement usage metrics and event tracking
+   ```typescript
+   // Required endpoints:
+   // GET /analytics/usage?period=30d - usage metrics for dashboard
+   // POST /analytics/events - track user interactions
+   ```
+
+3. **API Gateway Route Updates**: Add missing resource configurations
+4. **DynamoDB Schema**: Ensure session and analytics data models exist
+5. **Integration Testing**: Comprehensive testing of all frontend/backend interactions
+
+#### Prevention Best Practices
+- **API-First Development**: Define and implement complete API contracts before frontend development
+- **Contract Testing**: Use tools like Pact or OpenAPI to validate API contracts
+- **Integration Verification**: Test frontend against actual API endpoints, not mocks
+- **Endpoint Auditing**: Regular comparison of frontend API calls vs implemented endpoints
+- **Deployment Validation**: Include end-to-end testing in deployment pipeline
+- **Documentation Synchronization**: Keep API documentation in sync with implementation
+
+#### Key Lesson Learned
+**Never assume API completeness based on partial functionality.** Always verify that:
+1. Frontend API service layer matches implemented backend endpoints
+2. All expected endpoints are implemented and deployed
+3. Integration testing covers all user workflows, not just authentication
+4. API implementation matches architectural design documents
+5. Deployment validation includes comprehensive endpoint testing
+
+**Critical Insight:** Authentication working does not indicate complete API functionality. Dashboard features require separate session and analytics endpoints that must be explicitly implemented and deployed.
 
 ---
 
