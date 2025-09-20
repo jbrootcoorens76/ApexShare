@@ -1,7 +1,7 @@
 ---
 name: serverless-backend-api-developer
 description: Use this agent when you need to develop serverless backend APIs using AWS Lambda, API Gateway, and other AWS services. Examples: <example>Context: User needs to implement a file upload/download API with Lambda functions. user: 'I need to create a serverless API for file uploads with S3 storage and email notifications' assistant: 'I'll use the serverless-backend-api-developer agent to implement the Lambda functions, API Gateway endpoints, and AWS service integrations for your file upload system' <commentary>The user needs serverless backend development, so use the serverless-backend-api-developer agent to create the complete API implementation.</commentary></example> <example>Context: User has infrastructure setup and needs backend implementation. user: 'The infrastructure is ready, now I need to implement the Lambda functions for my REST API' assistant: 'I'll use the serverless-backend-api-developer agent to create all the Lambda functions, API endpoints, and service integrations based on your infrastructure setup' <commentary>User needs Lambda function implementation, so use the serverless-backend-api-developer agent to build the backend logic.</commentary></example>
-model: sonnet
+model: opus
 color: cyan
 ---
 
