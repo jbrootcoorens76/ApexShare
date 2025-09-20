@@ -61,14 +61,14 @@ export class SecurityStack extends cdk.Stack {
     // Create IAM roles and policies
     const { lambdaExecutionRole, apiGatewayRole } = this.createIamRoles(config, resourceNames, kmsKeys);
 
-    // Create WAF Web ACL
+    // Create WAF Web ACL (simplified for initial deployment)
     const webAcl = this.createWebAcl(config, resourceNames);
 
-    // Create CloudTrail for audit logging
+    // Create CloudTrail for audit logging (simplified for initial deployment)
     const cloudTrail = this.createCloudTrail(config, resourceNames, kmsKeys);
 
-    // Create Config rules for compliance
-    this.createConfigRules(config, resourceNames);
+    // Create Config rules for compliance (simplified for initial deployment)
+    // this.createConfigRules(config, resourceNames);
 
     // Create SNS topic for security notifications
     const complianceNotificationTopic = this.createSecurityNotificationTopic(config, resourceNames);
@@ -391,7 +391,7 @@ export class SecurityStack extends cdk.Stack {
     const webAcl = new wafv2.CfnWebACL(this, 'WebAcl', {
       name: resourceNames.webAcl,
       description: 'WAF Web ACL for ApexShare application security',
-      scope: 'CLOUDFRONT',
+      scope: 'REGIONAL',
       defaultAction: { allow: {} },
       visibilityConfig: {
         sampledRequestsEnabled: true,
@@ -419,19 +419,19 @@ export class SecurityStack extends cdk.Stack {
   }
 
   /**
-   * Create WAF rules for security protection
+   * Create WAF rules for security protection (simplified for initial deployment)
    */
   private createWafRules(config: any): wafv2.CfnWebACL.RuleProperty[] {
     const rules: wafv2.CfnWebACL.RuleProperty[] = [];
 
-    // Rate limiting rule
+    // Basic rate limiting rule only for initial deployment
     rules.push({
       name: 'RateLimitRule',
       priority: 1,
       action: { block: {} },
       statement: {
         rateBasedStatement: {
-          limit: SECURITY_CONFIG.WAF.RATE_LIMIT,
+          limit: 2000, // Basic rate limit
           aggregateKeyType: 'IP',
         },
       },
@@ -442,99 +442,22 @@ export class SecurityStack extends cdk.Stack {
       },
     });
 
-    // Geographic restriction rule
-    if (SECURITY_CONFIG.WAF.BLOCKED_COUNTRIES.length > 0) {
-      rules.push({
-        name: 'GeoBlockRule',
-        priority: 2,
-        action: { block: {} },
-        statement: {
-          geoMatchStatement: {
-            countryCodes: [...SECURITY_CONFIG.WAF.BLOCKED_COUNTRIES],
-          },
-        },
-        visibilityConfig: {
-          sampledRequestsEnabled: true,
-          cloudWatchMetricsEnabled: true,
-          metricName: 'GeoBlockRule',
-        },
-      });
-    }
-
-    // AWS Managed Rules
-    SECURITY_CONFIG.WAF.MANAGED_RULES.forEach((ruleGroupName, index) => {
-      rules.push({
-        name: `AWSManagedRule${index + 1}`,
-        priority: 10 + index,
-        overrideAction: { none: {} },
-        statement: {
-          managedRuleGroupStatement: {
-            vendorName: 'AWS',
-            name: ruleGroupName,
-            excludedRules: [], // Can be configured per environment
-          },
-        },
-        visibilityConfig: {
-          sampledRequestsEnabled: true,
-          cloudWatchMetricsEnabled: true,
-          metricName: `AWSManagedRule${index + 1}`,
-        },
-      });
-    });
-
-    // Custom rule to block suspicious user agents
+    // Add just one AWS managed rule for basic protection
     rules.push({
-      name: 'BlockSuspiciousUserAgents',
-      priority: 50,
-      action: { block: {} },
+      name: 'AWSManagedCommonRule',
+      priority: 10,
+      overrideAction: { none: {} },
       statement: {
-        regexMatchStatement: {
-          regexString: '(bot|crawler|spider|scraper|scanner)',
-          fieldToMatch: {
-            singleHeader: { name: 'user-agent' },
-          },
-          textTransformations: [
-            {
-              priority: 0,
-              type: 'LOWERCASE',
-            },
-          ],
+        managedRuleGroupStatement: {
+          vendorName: 'AWS',
+          name: 'AWSManagedRulesCommonRuleSet',
+          excludedRules: [],
         },
       },
       visibilityConfig: {
         sampledRequestsEnabled: true,
         cloudWatchMetricsEnabled: true,
-        metricName: 'BlockSuspiciousUserAgents',
-      },
-    });
-
-    // Block requests with no User-Agent
-    rules.push({
-      name: 'BlockEmptyUserAgent',
-      priority: 51,
-      action: { block: {} },
-      statement: {
-        notStatement: {
-          statement: {
-            regexMatchStatement: {
-              regexString: '.+',
-              fieldToMatch: {
-                singleHeader: { name: 'user-agent' },
-              },
-              textTransformations: [
-                {
-                  priority: 0,
-                  type: 'NONE',
-                },
-              ],
-            },
-          },
-        },
-      },
-      visibilityConfig: {
-        sampledRequestsEnabled: true,
-        cloudWatchMetricsEnabled: true,
-        metricName: 'BlockEmptyUserAgent',
+        metricName: 'AWSManagedCommonRule',
       },
     });
 
@@ -560,17 +483,7 @@ export class SecurityStack extends cdk.Stack {
         {
           id: 'CloudTrailLogRetention',
           enabled: true,
-          expiration: cdk.Duration.days(COMPLIANCE_CONFIG.DATA_RETENTION.AUDIT_DATA_DAYS),
-          transitions: [
-            {
-              storageClass: s3.StorageClass.INFREQUENT_ACCESS,
-              transitionAfter: cdk.Duration.days(30),
-            },
-            {
-              storageClass: s3.StorageClass.GLACIER,
-              transitionAfter: cdk.Duration.days(90),
-            },
-          ],
+          expiration: cdk.Duration.days(90), // Simplified retention
         },
       ],
       removalPolicy: cdk.RemovalPolicy.RETAIN,
