@@ -150,88 +150,16 @@ export const useFileUpload = (options: UseFileUploadOptions) => {
         throw new Error(response.error || 'Failed to get upload URL')
       }
 
-      const { uploadId, uploadUrl, chunkSize } = response.data
-      const totalChunks = Math.ceil(file.size / chunkSize)
-      const abortController = new AbortController()
-
-      // Create upload tracking object
-      const upload: ActiveUpload = {
-        file,
-        uploadId,
-        totalChunks,
-        completedChunks: [],
-        currentChunk: 0,
-        abortController,
-        startTime: Date.now(),
-        lastProgressTime: Date.now(),
-        uploadedBytes: 0,
+      // Handle new session-based response format
+      if ('uploadId' in response.data && 'chunkSize' in response.data) {
+        // New multipart upload format
+        const { uploadId, uploadUrl, chunkSize } = response.data
+        return await handleMultipartUpload(file, fileId, uploadId, uploadUrl, chunkSize)
+      } else {
+        // Legacy single upload format - fallback for compatibility
+        const { uploadUrl, fields } = response.data as any
+        return await handleSingleUpload(file, fileId, uploadUrl, fields)
       }
-
-      setActiveUploads(prev => new Map(prev).set(fileId, upload))
-
-      // Start progress tracking
-      const progressInterval = setInterval(() => {
-        updateProgress(fileId)
-      }, 1000)
-      progressIntervalRef.current.set(fileId, progressInterval)
-
-      // Upload chunks
-      const uploadSettings = getRecommendedUploadSettings()
-      const chunkPromises: Promise<ChunkUploadResult>[] = []
-
-      for (let i = 0; i < totalChunks; i++) {
-        // Limit concurrent uploads
-        if (chunkPromises.length >= uploadSettings.maxConcurrentUploads) {
-          await Promise.race(chunkPromises)
-        }
-
-        const chunkPromise = uploadChunk(upload, i, uploadUrl)
-          .then(result => {
-            if (result.success) {
-              upload.completedChunks.push(result)
-              upload.currentChunk = i + 1
-              setActiveUploads(prev => new Map(prev).set(fileId, { ...upload }))
-            }
-            return result
-          })
-
-        chunkPromises.push(chunkPromise)
-      }
-
-      // Wait for all chunks to complete
-      const results = await Promise.all(chunkPromises)
-      const failedChunks = results.filter(r => !r.success)
-
-      if (failedChunks.length > 0) {
-        throw new Error(`Failed to upload ${failedChunks.length} chunks`)
-      }
-
-      // Complete multipart upload
-      const parts = results.map(r => ({
-        PartNumber: r.chunkIndex + 1,
-        ETag: r.etag,
-      }))
-
-      const completeResponse = await apiService.files.completeUpload(
-        sessionId,
-        uploadId,
-        parts
-      )
-
-      if (!completeResponse.success) {
-        throw new Error(completeResponse.error || 'Failed to complete upload')
-      }
-
-      // Clean up
-      clearInterval(progressInterval)
-      progressIntervalRef.current.delete(fileId)
-      setActiveUploads(prev => {
-        const newMap = new Map(prev)
-        newMap.delete(fileId)
-        return newMap
-      })
-
-      onComplete?.(fileId, completeResponse.data)
     } catch (error: any) {
       // Clean up on error
       const progressInterval = progressIntervalRef.current.get(fileId)
@@ -249,6 +177,157 @@ export const useFileUpload = (options: UseFileUploadOptions) => {
       onError?.(fileId, error.message || 'Upload failed')
     }
   }, [sessionId, onComplete, onError, updateProgress])
+
+  /**
+   * Handle multipart upload for large files
+   */
+  const handleMultipartUpload = async (
+    file: File,
+    fileId: string,
+    uploadId: string,
+    uploadUrl: string,
+    chunkSize: number
+  ) => {
+    const totalChunks = Math.ceil(file.size / chunkSize)
+    const abortController = new AbortController()
+
+    // Create upload tracking object
+    const upload: ActiveUpload = {
+      file,
+      uploadId,
+      totalChunks,
+      completedChunks: [],
+      currentChunk: 0,
+      abortController,
+      startTime: Date.now(),
+      lastProgressTime: Date.now(),
+      uploadedBytes: 0,
+    }
+
+    setActiveUploads(prev => new Map(prev).set(fileId, upload))
+
+    // Start progress tracking
+    const progressInterval = setInterval(() => {
+      updateProgress(fileId)
+    }, 1000)
+    progressIntervalRef.current.set(fileId, progressInterval)
+
+    // Upload chunks
+    const uploadSettings = getRecommendedUploadSettings()
+    const chunkPromises: Promise<ChunkUploadResult>[] = []
+
+    for (let i = 0; i < totalChunks; i++) {
+      // Limit concurrent uploads
+      if (chunkPromises.length >= uploadSettings.maxConcurrentUploads) {
+        await Promise.race(chunkPromises)
+      }
+
+      const chunkPromise = uploadChunk(upload, i, uploadUrl)
+        .then(result => {
+          if (result.success) {
+            upload.completedChunks.push(result)
+            upload.currentChunk = i + 1
+            setActiveUploads(prev => new Map(prev).set(fileId, { ...upload }))
+          }
+          return result
+        })
+
+      chunkPromises.push(chunkPromise)
+    }
+
+    // Wait for all chunks to complete
+    const results = await Promise.all(chunkPromises)
+    const failedChunks = results.filter(r => !r.success)
+
+    if (failedChunks.length > 0) {
+      throw new Error(`Failed to upload ${failedChunks.length} chunks`)
+    }
+
+    // Complete multipart upload
+    const parts = results.map(r => ({
+      PartNumber: r.chunkIndex + 1,
+      ETag: r.etag,
+    }))
+
+    const completeResponse = await apiService.files.completeUpload(
+      sessionId!,
+      uploadId,
+      parts
+    )
+
+    if (!completeResponse.success) {
+      throw new Error(completeResponse.error || 'Failed to complete upload')
+    }
+
+    // Clean up
+    clearInterval(progressInterval)
+    progressIntervalRef.current.delete(fileId)
+    setActiveUploads(prev => {
+      const newMap = new Map(prev)
+      newMap.delete(fileId)
+      return newMap
+    })
+
+    onComplete?.(fileId, completeResponse.data)
+  }
+
+  /**
+   * Handle single file upload using presigned POST
+   */
+  const handleSingleUpload = async (
+    file: File,
+    fileId: string,
+    uploadUrl: string,
+    fields: Record<string, string>
+  ) => {
+    const formData = new FormData()
+
+    // Add the fields first
+    Object.entries(fields).forEach(([key, value]) => {
+      formData.append(key, value)
+    })
+
+    // Add the file last
+    formData.append('file', file)
+
+    return new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const progress = (event.loaded / event.total) * 100
+          const progressData: UploadProgress = {
+            fileId,
+            fileName: file.name,
+            progress,
+            speed: 0,
+            eta: 0,
+            status: 'uploading',
+            uploadedBytes: event.loaded,
+            totalBytes: event.total,
+            startTime: Date.now(),
+          }
+          onProgress?.(fileId, progressData)
+        }
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          onComplete?.(fileId, { fileName: file.name, fileSize: file.size })
+          resolve()
+        } else {
+          reject(new Error(`Upload failed with status: ${xhr.status}`))
+        }
+      })
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('Upload failed due to network error'))
+      })
+
+      xhr.open('POST', uploadUrl)
+      xhr.send(formData)
+    })
+  }
 
   /**
    * Cancel file upload

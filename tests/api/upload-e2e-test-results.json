@@ -1,0 +1,216 @@
+{
+  "timestamp": "2025-09-21T05:29:29.112Z",
+  "summary": {
+    "duration": 2313,
+    "successRate": 54.55,
+    "total": 22,
+    "passed": 12,
+    "failed": 10,
+    "skipped": 0
+  },
+  "categories": {
+    "apiEndpoints": {
+      "passed": 2,
+      "failed": 2
+    },
+    "uploadFlow": {
+      "passed": 3,
+      "failed": 1
+    },
+    "responseFormat": {
+      "passed": 3,
+      "failed": 1
+    },
+    "integration": {
+      "passed": 2,
+      "failed": 2
+    },
+    "errorScenarios": {
+      "passed": 2,
+      "failed": 4
+    }
+  },
+  "tests": [
+    {
+      "id": "API-001",
+      "description": "CORS Preflight Request",
+      "status": "FAILED",
+      "duration": 169,
+      "error": "CORS preflight should return 200"
+    },
+    {
+      "id": "API-002",
+      "description": "Upload Initiate Endpoint",
+      "status": "PASSED",
+      "duration": 330,
+      "error": null
+    },
+    {
+      "id": "API-003",
+      "description": "Recent Uploads Endpoint",
+      "status": "PASSED",
+      "duration": 63,
+      "error": null
+    },
+    {
+      "id": "API-004",
+      "description": "Session Upload Endpoint",
+      "status": "FAILED",
+      "duration": 39,
+      "error": "Session upload should return 200"
+    },
+    {
+      "id": "FLOW-001",
+      "description": "Presigned URL Generation",
+      "status": "PASSED",
+      "duration": 73,
+      "error": null
+    },
+    {
+      "id": "FLOW-002",
+      "description": "File Size Validation - Valid Sizes",
+      "status": "PASSED",
+      "duration": 296,
+      "error": null
+    },
+    {
+      "id": "FLOW-003",
+      "description": "File Type Validation",
+      "status": "PASSED",
+      "duration": 298,
+      "error": null
+    },
+    {
+      "id": "FLOW-004",
+      "description": "Multipart Upload Configuration",
+      "status": "FAILED",
+      "duration": 41,
+      "error": "Multipart upload should be configured"
+    },
+    {
+      "id": "FORMAT-001",
+      "description": "Structured JSON Response Format",
+      "status": "PASSED",
+      "duration": 74,
+      "error": null
+    },
+    {
+      "id": "FORMAT-002",
+      "description": "File Size Display Format",
+      "status": "PASSED",
+      "duration": 118,
+      "error": null
+    },
+    {
+      "id": "FORMAT-003",
+      "description": "Progress and Speed Calculations",
+      "status": "PASSED",
+      "duration": 41,
+      "error": null
+    },
+    {
+      "id": "FORMAT-004",
+      "description": "Error Response Format",
+      "status": "FAILED",
+      "duration": 51,
+      "error": "Cannot read properties of undefined (reading 'status')"
+    },
+    {
+      "id": "INT-001",
+      "description": "Authorization Headers",
+      "status": "PASSED",
+      "duration": 67,
+      "error": null
+    },
+    {
+      "id": "INT-002",
+      "description": "CORS Functionality",
+      "status": "FAILED",
+      "duration": 50,
+      "error": "CORS preflight should succeed"
+    },
+    {
+      "id": "INT-003",
+      "description": "Upload Path Routing",
+      "status": "FAILED",
+      "duration": 114,
+      "error": "Session upload path should work"
+    },
+    {
+      "id": "INT-004",
+      "description": "Concurrent Upload Handling",
+      "status": "PASSED",
+      "duration": 180,
+      "error": null
+    },
+    {
+      "id": "ERR-001",
+      "description": "Missing File Data",
+      "status": "FAILED",
+      "duration": 50,
+      "error": "Cannot read properties of undefined (reading 'status')"
+    },
+    {
+      "id": "ERR-002",
+      "description": "Oversized File Validation",
+      "status": "FAILED",
+      "duration": 51,
+      "error": "Cannot read properties of undefined (reading 'status')"
+    },
+    {
+      "id": "ERR-003",
+      "description": "Invalid File Type Validation",
+      "status": "FAILED",
+      "duration": 42,
+      "error": "Cannot read properties of undefined (reading 'status')"
+    },
+    {
+      "id": "ERR-004",
+      "description": "Unauthorized Request Handling",
+      "status": "PASSED",
+      "duration": 67,
+      "error": null
+    },
+    {
+      "id": "ERR-005",
+      "description": "Security Injection Prevention",
+      "status": "FAILED",
+      "duration": 51,
+      "error": "Cannot read properties of undefined (reading 'status')"
+    },
+    {
+      "id": "ERR-006",
+      "description": "Malformed JSON Handling",
+      "status": "PASSED",
+      "duration": 43,
+      "error": null
+    }
+  ],
+  "assessment": {
+    "nanUndefinedResolved": true,
+    "uploadWorkflowFunctional": false,
+    "criticalIssues": [
+      {
+        "id": "API-001",
+        "description": "CORS Preflight Request",
+        "status": "FAILED",
+        "duration": 169,
+        "error": "CORS preflight should return 200"
+      },
+      {
+        "id": "API-004",
+        "description": "Session Upload Endpoint",
+        "status": "FAILED",
+        "duration": 39,
+        "error": "Session upload should return 200"
+      },
+      {
+        "id": "FORMAT-004",
+        "description": "Error Response Format",
+        "status": "FAILED",
+        "duration": 51,
+        "error": "Cannot read properties of undefined (reading 'status')"
+      }
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "concurrent": {
+    "concurrency": 5,
+    "totalTime": 199,
+    "successful": 5,
+    "failed": 0,
+    "averageResponseTime": 150.2,
+    "maxResponseTime": 202,
+    "minResponseTime": 61,
+    "throughput": 25.12562814070352
+  },
+  "sequential": {
+    "totalRequests": 4,
+    "totalTime": 1201,
+    "successful": 4,
+    "failed": 0,
+    "averageResponseTime": 300.25,
+    "maxResponseTime": 746,
+    "minResponseTime": 139
+  },
+  "stress": {
+    "totalRequests": 20,
+    "totalTime": 1442,
+    "successful": 20,
+    "failed": 0,
+    "averageResponseTime": 205.8,
+    "maxResponseTime": 562,
+    "minResponseTime": 137,
+    "throughput": 13.869625520110958,
+    "percentiles": {
+      "p50": 152,
+      "p95": 562,
+      "p99": 562
+    },
+    "errorRate": 0
+  },
+  "summary": {
+    "totalRequests": 44,
+    "successfulRequests": 44,
+    "failedRequests": 0,
+    "averageResponseTime": 218.75,
+    "maxResponseTime": 764,
+    "minResponseTime": 58
+  }
+}

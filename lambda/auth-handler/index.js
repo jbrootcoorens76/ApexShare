@@ -122,7 +122,7 @@ const createResponse = (statusCode, body, additionalHeaders = {}) => {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': process.env.CORS_ORIGINS || '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Request-ID',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token, X-Request-ID',
       'Access-Control-Allow-Credentials': 'true',
       ...additionalHeaders
     },
@@ -161,13 +161,20 @@ const createSuccessResponse = (data = null, message = null) => {
 };
 
 /**
- * Extract token from Authorization header
+ * Extract token from Authorization header or X-Auth-Token header
  */
 const extractToken = (headers) => {
   if (!headers) {
     return null;
   }
 
+  // First check X-Auth-Token header (fallback for custom domain issues)
+  const xAuthToken = headers['X-Auth-Token'] || headers['x-auth-token'];
+  if (xAuthToken) {
+    return xAuthToken;
+  }
+
+  // Then check standard Authorization header
   const authHeader = headers.Authorization || headers.authorization;
   if (!authHeader) {
     return null;
@@ -342,7 +349,7 @@ const handleOptions = () => {
     headers: {
       'Access-Control-Allow-Origin': process.env.CORS_ORIGINS || '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Request-ID',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token, X-Request-ID',
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Max-Age': '86400'
     },

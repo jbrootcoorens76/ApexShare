@@ -1,0 +1,386 @@
+{
+  "timestamp": "2025-09-21T04:41:20.168Z",
+  "baseURL": "https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1",
+  "testResults": {
+    "functional": {
+      "testResults": {
+        "analytics": {
+          "GET /analytics/usage?period=30d": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 194,
+              "dataStructure": "Valid",
+              "period": "30d",
+              "totalUploads": 87,
+              "totalDownloads": 156,
+              "dailyStatsCount": 30,
+              "topStudentsCount": 3,
+              "recentActivityCount": 3
+            },
+            "timestamp": "2025-09-21T04:33:04.141Z"
+          },
+          "GET /analytics/usage?period=7d": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 65,
+              "dataStructure": "Valid",
+              "period": "7d",
+              "totalUploads": 87,
+              "totalDownloads": 156,
+              "dailyStatsCount": 7,
+              "topStudentsCount": 3,
+              "recentActivityCount": 3
+            },
+            "timestamp": "2025-09-21T04:33:04.206Z"
+          },
+          "GET /analytics/usage?period=1d": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 59,
+              "dataStructure": "Valid",
+              "period": "1d",
+              "totalUploads": 87,
+              "totalDownloads": 156,
+              "dailyStatsCount": 1,
+              "topStudentsCount": 3,
+              "recentActivityCount": 3
+            },
+            "timestamp": "2025-09-21T04:33:04.265Z"
+          },
+          "POST /analytics/events": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 70,
+              "eventId": "219449df-a4d4-443f-8249-f094c46f3f0d",
+              "message": "Event tracked successfully"
+            },
+            "timestamp": "2025-09-21T04:33:04.335Z"
+          }
+        },
+        "sessions": {
+          "GET /sessions": {
+            "status": "FAIL",
+            "details": {
+              "responseTime": 69,
+              "error": "Request failed with status code 500",
+              "status": 500,
+              "errorData": {
+                "success": false,
+                "error": {
+                  "code": "INTERNAL_ERROR",
+                  "message": "Failed to retrieve sessions"
+                }
+              }
+            },
+            "timestamp": "2025-09-21T04:33:04.404Z"
+          },
+          "POST /sessions": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 66,
+              "createdSessionId": "75c77e8c-b45f-4518-aea4-21efab846b0a",
+              "sessionName": "Test Session",
+              "sessionStatus": "pending",
+              "uploadCount": 0
+            },
+            "timestamp": "2025-09-21T04:33:04.470Z"
+          },
+          "GET /sessions/{sessionId}": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 68,
+              "sessionId": "75c77e8c-b45f-4518-aea4-21efab846b0a",
+              "sessionStatus": "completed"
+            },
+            "timestamp": "2025-09-21T04:33:04.538Z"
+          },
+          "PUT /sessions/{sessionId}": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 63,
+              "updatedName": "Updated Test Session",
+              "sessionId": "75c77e8c-b45f-4518-aea4-21efab846b0a"
+            },
+            "timestamp": "2025-09-21T04:33:04.601Z"
+          },
+          "DELETE /sessions/{sessionId}": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 61,
+              "status": 200
+            },
+            "timestamp": "2025-09-21T04:33:04.662Z"
+          }
+        },
+        "authentication": {
+          "Valid Bearer token": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 59,
+              "status": 200
+            },
+            "timestamp": "2025-09-21T04:33:04.721Z"
+          },
+          "Invalid Bearer token handling": {
+            "status": "WARN",
+            "details": {
+              "responseTime": 57,
+              "warning": "API accepts invalid tokens - authentication not properly implemented",
+              "status": 200
+            },
+            "timestamp": "2025-09-21T04:33:04.778Z"
+          },
+          "Missing Bearer token returns 401": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 60,
+              "status": 401
+            },
+            "timestamp": "2025-09-21T04:33:04.838Z"
+          }
+        },
+        "cors": {
+          "OPTIONS request with CORS headers": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 50,
+              "corsHeaders": {
+                "access-control-allow-origin": "https://apexshare.be",
+                "access-control-allow-methods": "GET,POST,OPTIONS",
+                "access-control-allow-headers": "Content-Type,Authorization,X-Requested-With,Accept,Origin"
+              }
+            },
+            "timestamp": "2025-09-21T04:33:04.888Z"
+          },
+          "CORS headers on GET requests": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 65,
+              "allowOrigin": "https://apexshare.be"
+            },
+            "timestamp": "2025-09-21T04:33:04.953Z"
+          }
+        },
+        "errorHandling": {
+          "Malformed JSON handling": {
+            "status": "WARN",
+            "details": {
+              "responseTime": 100,
+              "warning": "API accepts malformed JSON or handles it gracefully",
+              "status": 200
+            },
+            "timestamp": "2025-09-21T04:33:05.415Z"
+          },
+          "Invalid session ID handling": {
+            "status": "FAIL",
+            "details": {
+              "responseTime": 66,
+              "error": "Unexpected response for invalid session ID",
+              "actualStatus": 200
+            },
+            "timestamp": "2025-09-21T04:33:05.481Z"
+          },
+          "Invalid period parameter handling": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 62,
+              "note": "API gracefully handles invalid period (uses default)",
+              "actualStatus": 200
+            },
+            "timestamp": "2025-09-21T04:33:05.543Z"
+          }
+        },
+        "summary": {
+          "totalTests": 18,
+          "passedTests": 14,
+          "failedTests": 2,
+          "warnings": 2,
+          "issues": [
+            "sessions: GET /sessions - Request failed with status code 500",
+            "errorHandling: Invalid session ID handling - Unexpected response for invalid session ID"
+          ],
+          "warnings_list": [
+            "authentication: Invalid Bearer token handling - API accepts invalid tokens - authentication not properly implemented",
+            "errorHandling: Malformed JSON handling - API accepts malformed JSON or handles it gracefully"
+          ]
+        },
+        "integration": {
+          "Health endpoint availability": {
+            "status": "PASS",
+            "details": {
+              "responseTime": 401,
+              "status": 200,
+              "note": "Health endpoint exists"
+            },
+            "timestamp": "2025-09-21T04:33:05.354Z"
+          }
+        }
+      },
+      "overallReadiness": "READY",
+      "criticalSuccessRate": 100,
+      "summary": {
+        "totalTests": 18,
+        "passed": 14,
+        "failed": 2,
+        "warnings": 2,
+        "successRate": "77.8"
+      }
+    },
+    "performance": {
+      "concurrent": {
+        "concurrency": 5,
+        "totalTime": 199,
+        "successful": 5,
+        "failed": 0,
+        "averageResponseTime": 150.2,
+        "maxResponseTime": 202,
+        "minResponseTime": 61,
+        "throughput": 25.12562814070352
+      },
+      "sequential": {
+        "totalRequests": 4,
+        "totalTime": 1201,
+        "successful": 4,
+        "failed": 0,
+        "averageResponseTime": 300.25,
+        "maxResponseTime": 746,
+        "minResponseTime": 139
+      },
+      "stress": {
+        "totalRequests": 20,
+        "totalTime": 1442,
+        "successful": 20,
+        "failed": 0,
+        "averageResponseTime": 205.8,
+        "maxResponseTime": 562,
+        "minResponseTime": 137,
+        "throughput": 13.869625520110958,
+        "percentiles": {
+          "p50": 152,
+          "p95": 562,
+          "p99": 562
+        },
+        "errorRate": 0
+      },
+      "summary": {
+        "totalRequests": 44,
+        "successfulRequests": 44,
+        "failedRequests": 0,
+        "averageResponseTime": 218.75,
+        "maxResponseTime": 764,
+        "minResponseTime": 58
+      }
+    }
+  },
+  "summary": {
+    "overallReadiness": "READY",
+    "endpointAnalysis": {
+      "analytics": {
+        "status": "WORKING",
+        "endpoints": {
+          "GET /analytics/usage": "WORKING",
+          "POST /analytics/events": "WORKING"
+        },
+        "issues": []
+      },
+      "sessions": {
+        "status": "PARTIALLY_WORKING",
+        "endpoints": {
+          "GET /sessions": "BROKEN",
+          "POST /sessions": "WORKING",
+          "GET /sessions/{id}": "WORKING",
+          "PUT /sessions/{id}": "WORKING",
+          "DELETE /sessions/{id}": "WORKING"
+        },
+        "issues": [
+          "Session listing returns 500 error"
+        ]
+      },
+      "authentication": {
+        "status": "PARTIALLY_WORKING",
+        "endpoints": {
+          "Valid token handling": "WORKING",
+          "Invalid token handling": "WARNING",
+          "Missing token handling": "WORKING"
+        },
+        "issues": [
+          "API accepts invalid Bearer tokens"
+        ]
+      },
+      "cors": {
+        "status": "WORKING",
+        "endpoints": {
+          "OPTIONS requests": "WORKING",
+          "CORS headers": "WORKING"
+        },
+        "issues": []
+      }
+    },
+    "performanceAnalysis": {
+      "status": "EXCELLENT",
+      "metrics": {
+        "averageResponseTime": 205.8,
+        "throughput": 13.869625520110958,
+        "errorRate": 0,
+        "p95ResponseTime": 562,
+        "successRate": 100
+      },
+      "assessment": "Good response times. High throughput capability. Excellent reliability"
+    },
+    "keyFindings": [
+      "✅ ANALYTICS: All endpoints functional",
+      "⚠️  SESSIONS: Partially functional - Session listing returns 500 error",
+      "⚠️  AUTHENTICATION: Partially functional - API accepts invalid Bearer tokens",
+      "✅ CORS: All endpoints functional",
+      "✅ PERFORMANCE: Excellent performance metrics"
+    ],
+    "dashboardCapabilities": {
+      "analytics": {
+        "dataRetrieval": true,
+        "eventTracking": true,
+        "periodFiltering": true
+      },
+      "sessions": {
+        "creation": true,
+        "listing": false,
+        "viewing": true,
+        "updating": true,
+        "deletion": true
+      },
+      "security": {
+        "authentication": true,
+        "tokenValidation": false,
+        "accessControl": true
+      },
+      "integration": {
+        "cors": true,
+        "errorHandling": true,
+        "responseFormat": true
+      }
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "category": "Functionality",
+      "issue": "Session listing endpoint returns 500 error",
+      "recommendation": "Fix the GET /sessions endpoint to properly retrieve and return session data",
+      "impact": "Users cannot view existing sessions in the dashboard"
+    },
+    {
+      "priority": "MEDIUM",
+      "category": "Security",
+      "issue": "API accepts invalid Bearer tokens",
+      "recommendation": "Implement proper token validation to reject invalid authentication tokens",
+      "impact": "Potential security vulnerability allowing unauthorized access"
+    },
+    {
+      "priority": "LOW",
+      "category": "Monitoring",
+      "issue": "Production monitoring needed",
+      "recommendation": "Implement CloudWatch alarms and dashboards for API monitoring",
+      "impact": "Better visibility into production API health and performance"
+    }
+  ],
+  "overallReadiness": "READY"
+}

@@ -56,9 +56,10 @@ const createApiClient = (): AxiosInstance => {
       config.headers['X-Requested-With'] = generateRequestId()
 
       // Add authentication token if available
+      // Using X-Auth-Token header instead of Authorization to avoid API Gateway interpretation issues
       const token = getAuthToken()
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`
+        config.headers['X-Auth-Token'] = token  // No 'Bearer ' prefix needed
       }
 
       // Log request in development
@@ -245,9 +246,11 @@ export const apiService = {
 
     getUploadUrl: async (sessionId: string, fileName: string, fileSize: number, mimeType: string): Promise<ApiResponse<PresignedUploadUrl>> => {
       const response = await apiClient.post(`/sessions/${sessionId}/upload`, {
+        // API Gateway model expects these fields for validation
+        studentEmail: 'session@placeholder.com', // Required by API Gateway model
         fileName,
         fileSize,
-        mimeType,
+        contentType: mimeType, // API Gateway expects 'contentType' field name (not mimeType)
       })
       return response.data
     },

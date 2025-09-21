@@ -1,0 +1,14 @@
+{
+  "name": "analytics-handler",
+  "version": "1.0.0",
+  "description": "ApexShare Analytics Handler Lambda",
+  "main": "index.js",
+  "dependencies": {
+    "uuid": "^9.0.0",
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0"
+  },
+  "keywords": ["aws", "lambda", "analytics", "apexshare"],
+  "author": "ApexShare",
+  "license": "MIT"
+}

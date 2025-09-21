@@ -9,13 +9,17 @@
  * Format file size in human-readable format
  */
 export const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
+  if (!bytes || bytes === 0 || !isFinite(bytes) || isNaN(bytes)) return '0 B'
 
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
 
+  if (i >= sizes.length) return '0 B'
+
   const size = parseFloat((bytes / Math.pow(k, i)).toFixed(1))
+  if (!isFinite(size) || isNaN(size)) return '0 B'
+
   return `${size} ${sizes[i]}`
 }
 
@@ -23,13 +27,17 @@ export const formatFileSize = (bytes: number): string => {
  * Format transfer speed in human-readable format
  */
 export const formatSpeed = (bytesPerSecond: number): string => {
-  if (bytesPerSecond === 0) return '0 B/s'
+  if (!bytesPerSecond || bytesPerSecond === 0 || !isFinite(bytesPerSecond) || isNaN(bytesPerSecond)) return '0 B/s'
 
   const k = 1024
   const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s']
   const i = Math.floor(Math.log(bytesPerSecond) / Math.log(k))
 
+  if (i >= sizes.length) return '0 B/s'
+
   const speed = parseFloat((bytesPerSecond / Math.pow(k, i)).toFixed(1))
+  if (!isFinite(speed) || isNaN(speed)) return '0 B/s'
+
   return `${speed} ${sizes[i]}`
 }
 
@@ -284,8 +292,12 @@ export const getInitials = (name: string): string => {
  * Format progress as a percentage string
  */
 export const formatProgress = (current: number, total: number): string => {
-  if (total === 0) return '0%'
+  if (!total || total === 0 || !isFinite(total) || isNaN(total)) return '0%'
+  if (!current || current === 0 || !isFinite(current) || isNaN(current)) return '0%'
+
   const percentage = Math.min((current / total) * 100, 100)
+  if (!isFinite(percentage) || isNaN(percentage)) return '0%'
+
   return `${Math.round(percentage)}%`
 }
 

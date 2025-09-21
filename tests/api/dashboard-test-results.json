@@ -1,0 +1,214 @@
+{
+  "testResults": {
+    "analytics": {
+      "GET /analytics/usage?period=30d": {
+        "status": "FAIL",
+        "details": {
+          "responseTime": 311,
+          "error": "Missing required fields in response",
+          "receivedFields": [
+            "success",
+            "data"
+          ]
+        },
+        "timestamp": "2025-09-21T04:24:30.383Z"
+      },
+      "GET /analytics/usage?period=7d": {
+        "status": "FAIL",
+        "details": {
+          "responseTime": 198,
+          "error": "Missing required fields in response",
+          "receivedFields": [
+            "success",
+            "data"
+          ]
+        },
+        "timestamp": "2025-09-21T04:24:30.581Z"
+      },
+      "GET /analytics/usage?period=1d": {
+        "status": "FAIL",
+        "details": {
+          "responseTime": 61,
+          "error": "Missing required fields in response",
+          "receivedFields": [
+            "success",
+            "data"
+          ]
+        },
+        "timestamp": "2025-09-21T04:24:30.642Z"
+      },
+      "POST /analytics/events": {
+        "status": "PASS",
+        "details": {
+          "responseTime": 78,
+          "response": {
+            "success": true,
+            "data": {
+              "message": "Event tracked successfully",
+              "eventId": "54457449-7b45-4456-946e-aa87133dbf2b"
+            }
+          }
+        },
+        "timestamp": "2025-09-21T04:24:30.720Z"
+      }
+    },
+    "sessions": {
+      "GET /sessions": {
+        "status": "FAIL",
+        "details": {
+          "responseTime": 284,
+          "error": "Request failed with status code 500",
+          "status": 500
+        },
+        "timestamp": "2025-09-21T04:24:31.004Z"
+      },
+      "POST /sessions": {
+        "status": "FAIL",
+        "details": {
+          "responseTime": 73,
+          "error": "No session ID in response",
+          "response": {
+            "success": true,
+            "data": {
+              "id": "bc3ade69-0c56-4841-a464-49de142814eb",
+              "name": "Test Session",
+              "description": "Test session for API validation",
+              "status": "pending",
+              "createdAt": "2025-09-21T04:24:31.062Z",
+              "updatedAt": "2025-09-21T04:24:31.062Z",
+              "uploadCount": 0
+            }
+          }
+        },
+        "timestamp": "2025-09-21T04:24:31.077Z"
+      },
+      "Individual session tests": {
+        "status": "SKIP",
+        "details": {
+          "error": "No session ID available for testing"
+        },
+        "timestamp": "2025-09-21T04:24:31.077Z"
+      }
+    },
+    "authentication": {
+      "Valid Bearer token": {
+        "status": "PASS",
+        "details": {
+          "responseTime": 82,
+          "status": 200
+        },
+        "timestamp": "2025-09-21T04:24:31.159Z"
+      },
+      "Invalid Bearer token returns 401": {
+        "status": "FAIL",
+        "details": {
+          "responseTime": 121,
+          "error": "Should return 401 for invalid token",
+          "actualStatus": 200
+        },
+        "timestamp": "2025-09-21T04:24:31.280Z"
+      },
+      "Missing Bearer token returns 401": {
+        "status": "PASS",
+        "details": {
+          "responseTime": 141,
+          "status": 401
+        },
+        "timestamp": "2025-09-21T04:24:31.421Z"
+      }
+    },
+    "cors": {
+      "OPTIONS request with CORS headers": {
+        "status": "PASS",
+        "details": {
+          "responseTime": 46,
+          "corsHeaders": {
+            "access-control-allow-origin": "https://apexshare.be",
+            "access-control-allow-methods": "GET,POST,OPTIONS",
+            "access-control-allow-headers": "Content-Type,Authorization,X-Requested-With,Accept,Origin"
+          }
+        },
+        "timestamp": "2025-09-21T04:24:31.467Z"
+      }
+    },
+    "errorHandling": {
+      "Malformed JSON request": {
+        "status": "FAIL",
+        "details": {
+          "responseTime": 61,
+          "error": "Should return error for malformed JSON",
+          "actualStatus": 200
+        },
+        "timestamp": "2025-09-21T04:24:31.986Z"
+      },
+      "Invalid session ID returns 404": {
+        "status": "FAIL",
+        "details": {
+          "responseTime": 135,
+          "error": "Should return 404 for invalid session ID",
+          "actualStatus": 200
+        },
+        "timestamp": "2025-09-21T04:24:32.121Z"
+      },
+      "Invalid period parameter": {
+        "status": "INFO",
+        "details": {
+          "responseTime": 63,
+          "note": "API accepts invalid period (may use default)",
+          "actualStatus": 200
+        },
+        "timestamp": "2025-09-21T04:24:32.184Z"
+      }
+    },
+    "summary": {
+      "totalTests": 17,
+      "passedTests": 5,
+      "failedTests": 12,
+      "issues": [
+        "analytics: GET /analytics/usage?period=30d - Missing required fields in response",
+        "analytics: GET /analytics/usage?period=7d - Missing required fields in response",
+        "analytics: GET /analytics/usage?period=1d - Missing required fields in response",
+        "sessions: GET /sessions - Request failed with status code 500",
+        "sessions: POST /sessions - No session ID in response",
+        "sessions: Individual session tests - No session ID available for testing",
+        "authentication: Invalid Bearer token returns 401 - Should return 401 for invalid token",
+        "integration: Integration test /status - Failed",
+        "integration: Integration test /version - Failed",
+        "errorHandling: Malformed JSON request - Should return error for malformed JSON",
+        "errorHandling: Invalid session ID returns 404 - Should return 404 for invalid session ID",
+        "errorHandling: Invalid period parameter - Failed"
+      ]
+    },
+    "integration": {
+      "Integration test /health": {
+        "status": "PASS",
+        "details": {
+          "responseTime": 377,
+          "status": 200,
+          "note": "Endpoint exists and responds"
+        },
+        "timestamp": "2025-09-21T04:24:31.844Z"
+      },
+      "Integration test /status": {
+        "status": "INFO",
+        "details": {
+          "responseTime": 39,
+          "status": 403,
+          "note": "Endpoint not found (expected for new API)"
+        },
+        "timestamp": "2025-09-21T04:24:31.883Z"
+      },
+      "Integration test /version": {
+        "status": "INFO",
+        "details": {
+          "responseTime": 41,
+          "status": 403,
+          "note": "Endpoint not found (expected for new API)"
+        },
+        "timestamp": "2025-09-21T04:24:31.924Z"
+      }
+    }
+  },
+  "overallReadiness": "NOT_READY",
+  "criticalPassed": false
+}

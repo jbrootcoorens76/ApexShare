@@ -1,0 +1,14 @@
+{
+  "Variables": {
+    "PRESIGNED_URL_EXPIRY": "3600",
+    "MAX_FILE_SIZE": "5368709120",
+    "DYNAMODB_TABLE": "apexshare-uploads-prod",
+    "ALLOWED_MIME_TYPES": "video/mp4,video/quicktime,video/x-msvideo,video/x-matroska",
+    "NODE_OPTIONS": "--enable-source-maps",
+    "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+    "CORS_ORIGINS": "https://apexshare.be",
+    "S3_BUCKET_NAME": "apexshare-videos-prod",
+    "LOG_LEVEL": "WARN",
+    "JWT_SECRET": "apexshare-jwt-secret-prod-1758442397056"
+  }
+}

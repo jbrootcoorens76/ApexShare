@@ -44,6 +44,8 @@ export class ApiStack extends cdk.Stack {
   public readonly emailSender: lambda.Function;
   public readonly healthCheckHandler: lambda.Function;
   public readonly authHandler: lambda.Function;
+  public readonly sessionsHandler: lambda.Function;
+  public readonly analyticsHandler: lambda.Function;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
@@ -105,6 +107,10 @@ export class ApiStack extends cdk.Stack {
 
     this.authHandler = this.createAuthHandler(config, resourceNames);
 
+    this.sessionsHandler = this.createSessionsHandler(config, resourceNames, uploadsTable, dynamoEncryptionKey);
+
+    this.analyticsHandler = this.createAnalyticsHandler(config, resourceNames, uploadsTable, dynamoEncryptionKey);
+
     // TODO: Set up S3 event notifications (currently disabled to avoid cyclic dependencies)
     // this.setupS3EventNotifications(videosBucket, this.emailSender);
 
@@ -155,19 +161,7 @@ export class ApiStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.ARM_64,
       handler: 'index.handler',
-      // TODO: Replace with proper asset bundling when Docker is available
-      code: lambda.Code.fromInline(`
-        exports.handler = async (event) => {
-          return {
-            statusCode: 200,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: 'Upload handler placeholder - needs proper implementation',
-              event: event
-            })
-          };
-        };
-      `),
+      code: lambda.Code.fromAsset('lambda/upload-handler'),
       timeout: cdk.Duration.seconds(config.lambda.timeout.uploadHandler),
       memorySize: config.lambda.memorySize.uploadHandler,
       logGroup,
@@ -421,6 +415,92 @@ export class ApiStack extends cdk.Stack {
   }
 
   /**
+   * Create Sessions Handler Lambda function
+   */
+  private createSessionsHandler(
+    config: any,
+    resourceNames: ReturnType<typeof getResourceNames>,
+    uploadsTable: dynamodb.Table,
+    dynamoEncryptionKey: kms.Key
+  ): lambda.Function {
+    const logGroup = new logs.LogGroup(this, 'SessionsHandlerLogGroup', {
+      logGroupName: `/aws/lambda/apexshare-sessions-handler-${config.env}`,
+      retention: logs.RetentionDays.TWO_WEEKS,
+      removalPolicy: config.env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+    });
+
+    const func = new lambda.Function(this, 'SessionsHandler', {
+      functionName: `apexshare-sessions-handler-${config.env}`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      architecture: lambda.Architecture.ARM_64,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/sessions-handler'),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      logGroup,
+      retryAttempts: 2,
+      maxEventAge: cdk.Duration.hours(1),
+      environment: {
+        ...LAMBDA_CONFIG.ENVIRONMENT_VARIABLES,
+        DYNAMODB_TABLE: uploadsTable.tableName,
+        CORS_ORIGINS: config.corsOrigins.join(','),
+        LOG_LEVEL: config.logLevel,
+        NODE_ENV: config.env,
+      },
+      environmentEncryption: dynamoEncryptionKey,
+    });
+
+    // Grant permissions
+    uploadsTable.grantReadWriteData(func);
+    dynamoEncryptionKey.grantDecrypt(func);
+
+    return func;
+  }
+
+  /**
+   * Create Analytics Handler Lambda function
+   */
+  private createAnalyticsHandler(
+    config: any,
+    resourceNames: ReturnType<typeof getResourceNames>,
+    uploadsTable: dynamodb.Table,
+    dynamoEncryptionKey: kms.Key
+  ): lambda.Function {
+    const logGroup = new logs.LogGroup(this, 'AnalyticsHandlerLogGroup', {
+      logGroupName: `/aws/lambda/apexshare-analytics-handler-${config.env}`,
+      retention: logs.RetentionDays.TWO_WEEKS,
+      removalPolicy: config.env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+    });
+
+    const func = new lambda.Function(this, 'AnalyticsHandler', {
+      functionName: `apexshare-analytics-handler-${config.env}`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      architecture: lambda.Architecture.ARM_64,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/analytics-handler'),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      logGroup,
+      retryAttempts: 2,
+      maxEventAge: cdk.Duration.hours(1),
+      environment: {
+        ...LAMBDA_CONFIG.ENVIRONMENT_VARIABLES,
+        DYNAMODB_TABLE: uploadsTable.tableName,
+        CORS_ORIGINS: config.corsOrigins.join(','),
+        LOG_LEVEL: config.logLevel,
+        NODE_ENV: config.env,
+      },
+      environmentEncryption: dynamoEncryptionKey,
+    });
+
+    // Grant permissions
+    uploadsTable.grantReadData(func);
+    dynamoEncryptionKey.grantDecrypt(func);
+
+    return func;
+  }
+
+  /**
    * Setup S3 event notifications to trigger email sending
    */
   private setupS3EventNotifications(videosBucket: s3.Bucket, emailSender: lambda.Function): void {
@@ -478,36 +558,8 @@ export class ApiStack extends cdk.Stack {
         dataTraceEnabled: config.env !== 'prod',
         metricsEnabled: true,
       },
-      policy: new iam.PolicyDocument({
-        statements: [
-          // Allow all requests over HTTPS
-          new iam.PolicyStatement({
-            sid: 'AllowPublicAccess',
-            effect: iam.Effect.ALLOW,
-            principals: [new iam.AnyPrincipal()],
-            actions: ['execute-api:Invoke'],
-            resources: ['*'],
-            conditions: {
-              Bool: {
-                'aws:SecureTransport': 'true',
-              },
-            },
-          }),
-          // Deny requests without HTTPS
-          new iam.PolicyStatement({
-            sid: 'DenyInsecureConnections',
-            effect: iam.Effect.DENY,
-            principals: [new iam.AnyPrincipal()],
-            actions: ['execute-api:Invoke'],
-            resources: ['*'],
-            conditions: {
-              Bool: {
-                'aws:SecureTransport': 'false',
-              },
-            },
-          }),
-        ],
-      }),
+      // Note: Removed resource policy to allow unauthenticated requests
+      // HTTPS enforcement is handled at CloudFront level instead
     });
   }
 
@@ -605,8 +657,38 @@ export class ApiStack extends cdk.Stack {
             type: apigateway.JsonSchemaType.STRING,
             enum: [...UPLOAD_CONSTRAINTS.ALLOWED_MIME_TYPES],
           },
+          mimeType: {
+            type: apigateway.JsonSchemaType.STRING,
+            enum: [...UPLOAD_CONSTRAINTS.ALLOWED_MIME_TYPES],
+          },
         },
         required: ['studentEmail', 'fileName', 'fileSize', 'contentType'],
+        additionalProperties: false,
+      },
+    });
+
+    // Create separate model for session-based upload requests (new frontend)
+    const sessionUploadRequestModel = this.api.addModel('SessionUploadRequestModel', {
+      contentType: 'application/json',
+      schema: {
+        type: apigateway.JsonSchemaType.OBJECT,
+        properties: {
+          fileName: {
+            type: apigateway.JsonSchemaType.STRING,
+            pattern: '^[a-zA-Z0-9\\s\\-\\._]{1,255}\\.(mp4|mov|avi|mkv)$',
+            maxLength: 255,
+          },
+          fileSize: {
+            type: apigateway.JsonSchemaType.INTEGER,
+            minimum: 1,
+            maximum: UPLOAD_CONSTRAINTS.MAX_FILE_SIZE,
+          },
+          contentType: {
+            type: apigateway.JsonSchemaType.STRING,
+            enum: [...UPLOAD_CONSTRAINTS.ALLOWED_MIME_TYPES],
+          },
+        },
+        required: ['fileName', 'fileSize', 'contentType'],
         additionalProperties: false,
       },
     });
@@ -765,6 +847,277 @@ export class ApiStack extends cdk.Stack {
         },
         {
           statusCode: '410',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // Sessions endpoints
+    const sessions = apiV1.addResource('sessions');
+
+    // GET /sessions - List sessions with pagination
+    sessions.addMethod('GET', new apigateway.LambdaIntegration(this.sessionsHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE, // Token validation handled in Lambda
+      requestParameters: {
+        'method.request.querystring.limit': false,
+        'method.request.querystring.offset': false,
+      },
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // POST /sessions - Create new session
+    sessions.addMethod('POST', new apigateway.LambdaIntegration(this.sessionsHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+      methodResponses: [
+        {
+          statusCode: '201',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '400',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // Individual session endpoints
+    const sessionWithId = sessions.addResource('{sessionId}');
+
+    // GET /sessions/{sessionId} - Get specific session
+    sessionWithId.addMethod('GET', new apigateway.LambdaIntegration(this.sessionsHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+      requestParameters: {
+        'method.request.path.sessionId': true,
+      },
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '404',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // PUT /sessions/{sessionId} - Update session
+    sessionWithId.addMethod('PUT', new apigateway.LambdaIntegration(this.sessionsHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+      requestParameters: {
+        'method.request.path.sessionId': true,
+      },
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '400',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '404',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // DELETE /sessions/{sessionId} - Delete session
+    sessionWithId.addMethod('DELETE', new apigateway.LambdaIntegration(this.sessionsHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+      requestParameters: {
+        'method.request.path.sessionId': true,
+      },
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '404',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // POST /sessions/{sessionId}/upload - Session-based upload endpoint
+    const sessionUpload = sessionWithId.addResource('upload');
+    sessionUpload.addMethod('POST', new apigateway.LambdaIntegration(this.uploadHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE, // Token validation handled in Lambda
+      requestValidator,
+      requestModels: {
+        'application/json': sessionUploadRequestModel,
+      },
+      requestParameters: {
+        'method.request.path.sessionId': true,
+      },
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '400',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '404',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // Analytics endpoints
+    const analytics = apiV1.addResource('analytics');
+
+    // GET /analytics/usage - Get usage metrics
+    const usage = analytics.addResource('usage');
+    usage.addMethod('GET', new apigateway.LambdaIntegration(this.analyticsHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE, // Token validation handled in Lambda
+      requestParameters: {
+        'method.request.querystring.period': false,
+      },
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // POST /analytics/events - Track analytics events
+    const events = analytics.addResource('events');
+    events.addMethod('POST', new apigateway.LambdaIntegration(this.analyticsHandler), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
           responseParameters: {
             'method.response.header.Access-Control-Allow-Origin': true,
           },

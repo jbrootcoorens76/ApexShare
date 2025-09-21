@@ -5,6 +5,7 @@
  * and user session persistence.
  */
 
+import React from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { apiService, setAuthToken, removeAuthToken } from '@/services/api'

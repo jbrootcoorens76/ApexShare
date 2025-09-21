@@ -14,9 +14,17 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
+import * as crypto from 'crypto';
 
 // Types
 interface UploadRequest {
+  fileName: string;
+  fileSize: number;
+  mimeType?: string;
+  contentType?: string;
+}
+
+interface LegacyUploadRequest {
   studentEmail: string;
   studentName?: string;
   trainerName?: string;
@@ -30,13 +38,23 @@ interface UploadRequest {
 interface UploadResponse {
   success: boolean;
   data?: {
-    fileId: string;
+    uploadId: string;
     uploadUrl: string;
-    fields: Record<string, string>;
+    chunkSize: number;
     expiresAt: string;
   };
   error?: string;
 }
+
+interface AuthResult {
+  isValid: boolean;
+  userId?: string;
+  role?: string;
+  error?: string;
+}
+
+// JWT secret (same as auth-handler)
+const JWT_SECRET = process.env.JWT_SECRET || 'demo-secret-key-apexshare-2024';
 
 // Constants
 const ALLOWED_MIME_TYPES = process.env.ALLOWED_MIME_TYPES?.split(',') || [
@@ -76,6 +94,81 @@ const SQL_INJECTION_PATTERNS = [
 ];
 
 /**
+ * Extract token from Authorization header
+ */
+function extractToken(headers: { [key: string]: string | undefined }): string | null {
+  if (!headers) {
+    return null;
+  }
+
+  const authHeader = headers.Authorization || headers.authorization;
+  if (!authHeader) {
+    return null;
+  }
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    return null;
+  }
+
+  return parts[1];
+}
+
+/**
+ * Verify JWT token
+ */
+function verifyToken(token: string): any {
+  try {
+    const [headerB64, payloadB64, signature] = token.split('.');
+
+    if (!headerB64 || !payloadB64 || !signature) {
+      throw new Error('Invalid token format');
+    }
+
+    // Verify signature
+    const expectedSignature = crypto
+      .createHmac('sha256', JWT_SECRET)
+      .update(`${headerB64}.${payloadB64}`)
+      .digest('base64url');
+
+    if (signature !== expectedSignature) {
+      throw new Error('Invalid signature');
+    }
+
+    // Decode payload
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
+
+    // Check expiration
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < now) {
+      throw new Error('Token expired');
+    }
+
+    return payload;
+  } catch (error) {
+    throw new Error(`Token verification failed: ${(error as Error).message}`);
+  }
+}
+
+/**
+ * Validate authorization for session upload
+ */
+function validateAuthorization(event: APIGatewayProxyEvent): AuthResult {
+  const token = extractToken(event.headers);
+
+  if (!token) {
+    return { isValid: false, error: 'No authorization token provided' };
+  }
+
+  try {
+    const payload = verifyToken(token);
+    return { isValid: true, userId: payload.userId, role: payload.role };
+  } catch (error) {
+    return { isValid: false, error: (error as Error).message };
+  }
+}
+
+/**
  * Main Lambda handler
  */
 export const handler = async (
@@ -86,6 +179,19 @@ export const handler = async (
   const startTime = Date.now();
 
   try {
+    // LOG DETAILED REQUEST INFO FOR DEBUGGING
+    console.log('DEBUG: Upload handler received request:', JSON.stringify({
+      timestamp: new Date().toISOString(),
+      requestId: requestId,
+      httpMethod: event.httpMethod,
+      path: event.path,
+      headers: event.headers,
+      bodyLength: event.body?.length || 0,
+      body: event.body,
+      requestContext: event.requestContext,
+      source: 'handler-entry'
+    }, null, 2));
+
     // Set up CORS headers
     const headers = {
       'Access-Control-Allow-Origin': process.env.CORS_ORIGINS || '*',
@@ -118,54 +224,31 @@ export const handler = async (
       return createErrorResponse(400, 'Invalid request detected', headers);
     }
 
-    // Parse and validate request body
-    const body = parseRequestBody(event.body);
-    if (!body) {
-      return createErrorResponse(400, 'Invalid JSON in request body', headers);
+    // Check if this is a session-based upload or legacy direct upload
+    const sessionId = extractSessionId(event.path);
+
+    if (sessionId) {
+      // Validate authorization for session upload
+      const authResult = validateAuthorization(event);
+      if (!authResult.isValid) {
+        logSecurityEvent('UnauthorizedUploadAttempt', 'HIGH', {
+          sessionId,
+          sourceIP: event.requestContext?.identity?.sourceIp,
+          error: authResult.error,
+          requestId,
+        });
+        return createErrorResponse(403, 'Unauthorized', headers);
+      }
+
+      // Handle session-based upload (new frontend)
+      return await handleSessionUpload(event, sessionId, headers, requestId, startTime, authResult);
+    } else if (event.path.includes('/uploads/initiate')) {
+      // Handle legacy direct upload (for backward compatibility)
+      return await handleLegacyUpload(event, headers, requestId, startTime);
+    } else {
+      return createErrorResponse(404, 'Upload endpoint not found', headers);
     }
 
-    const validationError = validateUploadRequest(body);
-    if (validationError) {
-      return createErrorResponse(400, validationError, headers);
-    }
-
-    // Generate unique file ID and S3 key
-    const fileId = uuidv4();
-    const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const sanitizedFileName = body.fileName.replace(FILENAME_SANITIZE_REGEX, '-');
-    const s3Key = `videos/${timestamp}/${fileId}-${sanitizedFileName}`;
-
-    // Create presigned POST URL for S3
-    const presignedPost = await createPresignedUploadUrl(s3Key, body, fileId);
-
-    // Store metadata in DynamoDB
-    await storeUploadMetadata(body, fileId, s3Key, timestamp);
-
-    // Log successful operation
-    logInfo('Upload initiated successfully', {
-      requestId,
-      fileId,
-      studentEmail: body.studentEmail,
-      fileName: body.fileName,
-      fileSize: body.fileSize,
-      duration: Date.now() - startTime,
-    });
-
-    const response: UploadResponse = {
-      success: true,
-      data: {
-        fileId,
-        uploadUrl: presignedPost.url,
-        fields: presignedPost.fields,
-        expiresAt: new Date(Date.now() + PRESIGNED_URL_EXPIRY * 1000).toISOString(),
-      },
-    };
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(response),
-    };
   } catch (error) {
     logError('Upload handler error', error, { requestId, duration: Date.now() - startTime });
 
@@ -179,6 +262,134 @@ export const handler = async (
     );
   }
 };
+
+/**
+ * Extract session ID from path (e.g., /sessions/123/upload -> 123)
+ */
+function extractSessionId(path: string): string | null {
+  const sessionMatch = path.match(/\/sessions\/([^\/]+)\/upload/);
+  return sessionMatch ? sessionMatch[1] : null;
+}
+
+/**
+ * Handle session-based upload (new frontend API)
+ */
+async function handleSessionUpload(
+  event: APIGatewayProxyEvent,
+  sessionId: string,
+  headers: Record<string, string>,
+  requestId: string,
+  startTime: number,
+  authResult: AuthResult
+): Promise<APIGatewayProxyResult> {
+  // Parse and validate request body
+  const body = parseRequestBody(event.body) as UploadRequest | null;
+  if (!body) {
+    return createErrorResponse(400, 'Invalid JSON in request body', headers);
+  }
+
+  const validationError = validateSessionUploadRequest(body);
+  if (validationError) {
+    return createErrorResponse(400, validationError, headers);
+  }
+
+  // Generate upload ID for multipart upload
+  const uploadId = uuidv4();
+  const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const sanitizedFileName = body.fileName.replace(FILENAME_SANITIZE_REGEX, '-');
+  const s3Key = `sessions/${sessionId}/videos/${timestamp}/${uploadId}-${sanitizedFileName}`;
+
+  // Create multipart upload
+  const multipartUpload = await createMultipartUpload(s3Key, body);
+
+  // Store upload metadata in DynamoDB
+  await storeSessionUploadMetadata(sessionId, body, uploadId, s3Key, timestamp, authResult);
+
+  // Log successful operation
+  logInfo('Session upload initiated successfully', {
+    requestId,
+    sessionId,
+    uploadId,
+    fileName: body.fileName,
+    fileSize: body.fileSize,
+    duration: Date.now() - startTime,
+  });
+
+  const response: UploadResponse = {
+    success: true,
+    data: {
+      uploadId,
+      uploadUrl: multipartUpload.uploadUrl,
+      chunkSize: getOptimalChunkSize(body.fileSize),
+      expiresAt: new Date(Date.now() + PRESIGNED_URL_EXPIRY * 1000).toISOString(),
+    },
+  };
+
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify(response),
+  };
+}
+
+/**
+ * Handle legacy direct upload (backward compatibility)
+ */
+async function handleLegacyUpload(
+  event: APIGatewayProxyEvent,
+  headers: Record<string, string>,
+  requestId: string,
+  startTime: number
+): Promise<APIGatewayProxyResult> {
+  // Parse and validate request body
+  const body = parseRequestBody(event.body) as LegacyUploadRequest | null;
+  if (!body) {
+    return createErrorResponse(400, 'Invalid JSON in request body', headers);
+  }
+
+  const validationError = validateLegacyUploadRequest(body);
+  if (validationError) {
+    return createErrorResponse(400, validationError, headers);
+  }
+
+  // Generate unique file ID and S3 key
+  const fileId = uuidv4();
+  const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const sanitizedFileName = body.fileName.replace(FILENAME_SANITIZE_REGEX, '-');
+  const s3Key = `videos/${timestamp}/${fileId}-${sanitizedFileName}`;
+
+  // Create presigned POST URL for S3
+  const presignedPost = await createPresignedUploadUrl(s3Key, body, fileId);
+
+  // Store metadata in DynamoDB
+  await storeLegacyUploadMetadata(body, fileId, s3Key, timestamp);
+
+  // Log successful operation
+  logInfo('Legacy upload initiated successfully', {
+    requestId,
+    fileId,
+    studentEmail: body.studentEmail,
+    fileName: body.fileName,
+    fileSize: body.fileSize,
+    duration: Date.now() - startTime,
+  });
+
+  const response = {
+    success: true,
+    data: {
+      fileId,
+      uploadUrl: presignedPost.url,
+      fields: presignedPost.fields,
+      expiresAt: new Date(Date.now() + PRESIGNED_URL_EXPIRY * 1000).toISOString(),
+    },
+  };
+
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify(response),
+  };
+}
 
 /**
  * Handle recent uploads request for dashboard
@@ -262,9 +473,51 @@ function parseRequestBody(body: string | null): UploadRequest | null {
 }
 
 /**
- * Validate upload request parameters
+ * Validate session-based upload request parameters
  */
-function validateUploadRequest(body: UploadRequest): string | null {
+function validateSessionUploadRequest(body: UploadRequest): string | null {
+  // LOG THE FULL REQUEST BODY FOR DEBUGGING
+  console.log('DEBUG: Validating upload request:', JSON.stringify({
+    timestamp: new Date().toISOString(),
+    bodyReceived: body,
+    bodyKeys: Object.keys(body || {}),
+    bodySize: JSON.stringify(body || {}).length,
+    source: 'validateSessionUploadRequest'
+  }));
+
+  if (!body.fileName || body.fileName.trim().length === 0) {
+    console.log('DEBUG: Validation failed - fileName missing or empty');
+    return 'File name is required';
+  }
+
+  if (!body.fileSize || body.fileSize < 1024 || body.fileSize > MAX_FILE_SIZE) {
+    console.log('DEBUG: Validation failed - fileSize invalid:', body.fileSize);
+    return `File size must be between 1KB and ${Math.round(MAX_FILE_SIZE / 1024 / 1024 / 1024)}GB`;
+  }
+
+  // Accept both mimeType (new frontend) and contentType (API Gateway compatibility)
+  const mimeType = body.mimeType || body.contentType;
+  console.log('DEBUG: MIME type validation:', JSON.stringify({
+    bodyMimeType: body.mimeType,
+    bodyContentType: body.contentType,
+    resolvedMimeType: mimeType,
+    allowedTypes: ALLOWED_MIME_TYPES,
+    isValid: mimeType && ALLOWED_MIME_TYPES.includes(mimeType)
+  }));
+
+  if (!mimeType || !ALLOWED_MIME_TYPES.includes(mimeType)) {
+    console.log('DEBUG: Validation failed - MIME type invalid');
+    return `MIME type must be one of: ${ALLOWED_MIME_TYPES.join(', ')}`;
+  }
+
+  console.log('DEBUG: Validation passed successfully');
+  return null;
+}
+
+/**
+ * Validate legacy upload request parameters
+ */
+function validateLegacyUploadRequest(body: LegacyUploadRequest): string | null {
   if (!body.studentEmail || !EMAIL_REGEX.test(body.studentEmail)) {
     return 'Valid student email is required';
   }
@@ -302,41 +555,93 @@ function validateUploadRequest(body: UploadRequest): string | null {
 }
 
 /**
- * Create presigned POST URL for S3 upload
+ * Get optimal chunk size based on file size
  */
-async function createPresignedUploadUrl(
+function getOptimalChunkSize(fileSize: number): number {
+  // Default chunk size is 5MB
+  const defaultChunkSize = 5 * 1024 * 1024;
+
+  // For very large files (>1GB), use larger chunks for better performance
+  if (fileSize > 1024 * 1024 * 1024) {
+    return 10 * 1024 * 1024; // 10MB
+  }
+
+  // For small files (<50MB), use smaller chunks
+  if (fileSize < 50 * 1024 * 1024) {
+    return 1 * 1024 * 1024; // 1MB
+  }
+
+  return defaultChunkSize;
+}
+
+/**
+ * Create multipart upload for chunked uploads
+ */
+async function createMultipartUpload(
   s3Key: string,
-  body: UploadRequest,
-  fileId: string
-): Promise<{ url: string; fields: Record<string, string> }> {
-  const result = await createPresignedPost(s3Client, {
-    Bucket: process.env.S3_BUCKET_NAME!,
-    Key: s3Key,
-    Fields: {
-      'Content-Type': body.contentType,
-      'x-amz-meta-file-id': fileId,
-      'x-amz-meta-student-email': body.studentEmail,
-      'x-amz-server-side-encryption': 'AES256',
-    },
-    Conditions: [
-      ['content-length-range', 0, MAX_FILE_SIZE],
-      ['starts-with', '$Content-Type', 'video/'],
-      ['eq', '$x-amz-meta-file-id', fileId],
-    ],
-    Expires: PRESIGNED_URL_EXPIRY,
-  });
+  body: UploadRequest
+): Promise<{ uploadUrl: string }> {
+  // For now, we'll use a simple presigned URL approach
+  // In a full implementation, this would use S3's CreateMultipartUpload API
+  // and return presigned URLs for each part
+
+  // Generate a base URL that the frontend can use with part numbers
+  const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
 
   return {
-    url: result.url,
-    fields: result.fields || {},
+    uploadUrl: baseUrl,
   };
 }
 
 /**
- * Store upload metadata in DynamoDB
+ * Store session upload metadata in DynamoDB
  */
-async function storeUploadMetadata(
+async function storeSessionUploadMetadata(
+  sessionId: string,
   body: UploadRequest,
+  uploadId: string,
+  s3Key: string,
+  timestamp: string,
+  authResult: AuthResult
+): Promise<void> {
+  const uploadDate = new Date().toISOString();
+  const ttl = Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60); // 90 days TTL
+
+  const command = new PutItemCommand({
+    TableName: process.env.DYNAMODB_TABLE,
+    Item: {
+      PK: { S: `SESSION#${sessionId}` },
+      SK: { S: `UPLOAD#${uploadId}` },
+      GSI1PK: { S: `UPLOAD#${uploadId}` },
+      GSI1SK: { S: `SESSION#${sessionId}#${uploadDate}` },
+      GSI2PK: { S: `DATE#${timestamp}` },
+      GSI2SK: { S: `UPLOAD#${uploadDate}#${uploadId}` },
+      uploadId: { S: uploadId },
+      sessionId: { S: sessionId },
+      fileName: { S: body.fileName.replace(FILENAME_SANITIZE_REGEX, '-') },
+      originalFileName: { S: body.fileName },
+      fileSize: { N: body.fileSize.toString() },
+      mimeType: { S: body.mimeType || body.contentType || '' },
+      s3Key: { S: s3Key },
+      s3Bucket: { S: process.env.S3_BUCKET_NAME || '' },
+      uploadDate: { S: uploadDate },
+      status: { S: 'pending' },
+      uploadType: { S: 'multipart' },
+      chunkSize: { N: getOptimalChunkSize(body.fileSize).toString() },
+      uploadedBy: { S: authResult.userId || 'unknown' },
+      uploaderRole: { S: authResult.role || 'unknown' },
+      ttl: { N: ttl.toString() },
+    },
+  });
+
+  await dynamoClient.send(command);
+}
+
+/**
+ * Store legacy upload metadata in DynamoDB
+ */
+async function storeLegacyUploadMetadata(
+  body: LegacyUploadRequest,
   fileId: string,
   s3Key: string,
   timestamp: string
@@ -367,6 +672,7 @@ async function storeUploadMetadata(
       s3Bucket: { S: process.env.S3_BUCKET_NAME || '' },
       uploadDate: { S: uploadDate },
       status: { S: 'pending' },
+      uploadType: { S: 'presigned_post' },
       downloadCount: { N: '0' },
       ttl: { N: ttl.toString() },
     },
@@ -374,6 +680,38 @@ async function storeUploadMetadata(
 
   await dynamoClient.send(command);
 }
+
+/**
+ * Create presigned POST URL for S3 upload (legacy)
+ */
+async function createPresignedUploadUrl(
+  s3Key: string,
+  body: LegacyUploadRequest,
+  fileId: string
+): Promise<{ url: string; fields: Record<string, string> }> {
+  const result = await createPresignedPost(s3Client, {
+    Bucket: process.env.S3_BUCKET_NAME!,
+    Key: s3Key,
+    Fields: {
+      'Content-Type': body.contentType,
+      'x-amz-meta-file-id': fileId,
+      'x-amz-meta-student-email': body.studentEmail,
+      'x-amz-server-side-encryption': 'AES256',
+    },
+    Conditions: [
+      ['content-length-range', 0, MAX_FILE_SIZE],
+      ['starts-with', '$Content-Type', 'video/'],
+      ['eq', '$x-amz-meta-file-id', fileId],
+    ],
+    Expires: PRESIGNED_URL_EXPIRY,
+  });
+
+  return {
+    url: result.url,
+    fields: result.fields || {},
+  };
+}
+
 
 /**
  * Create error response
