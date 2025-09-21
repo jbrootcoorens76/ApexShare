@@ -1,0 +1,3624 @@
+🚀 Deploying ApexShare infrastructure for environment: prod
+📍 Region: eu-west-1
+🏗️  Account: 617476838628
+📦 Creating Security Stack...
+📦 Creating DNS Stack...
+📦 Creating Storage Stack...
+📦 Creating API Stack...
+📦 Creating Frontend Stack...
+📦 Creating Email Stack...
+📦 Creating Monitoring Stack...
+🔒 Production environment detected - enabling additional protections
+⚠️  Production deployment checklist:
+   1. Ensure domain ownership is verified
+   2. Configure DNS name servers with domain registrar
+   3. Set up monitoring alerts and notifications
+   4. Verify backup configurations
+   5. Review security settings and access controls
+
+📋 Deployment Summary:
+   Environment: prod
+   Region: eu-west-1
+   Domain: apexshare.be
+   Account: 617476838628
+
+🏗️  Stacks to be deployed:
+   1. Security Stack (KMS, IAM, WAF)
+   2. DNS Stack (Route 53, ACM)
+   3. Storage Stack (S3, DynamoDB)
+   4. API Stack (Lambda, API Gateway)
+   5. Frontend Stack (CloudFront, S3)
+   6. Email Stack (SES)
+   7. Monitoring Stack (CloudWatch, Alarms)
+
+🚀 Ready to deploy! Run:
+   npm run deploy:prod
+
+💡 Useful commands:
+   npm run diff     - Compare deployed stack with current state
+   npm run synth    - Generate CloudFormation templates
+   npm run destroy  - Remove all resources (use with caution!)
+
+✅ All stacks synthesized successfully
+
+📖 Post-deployment instructions:
+1. Update DNS name servers with your domain registrar
+2. Verify SES domain identity and DKIM records
+3. Test upload and download functionality
+4. Configure monitoring alert recipients
+5. Set up backup schedules if required
+
+🔐 Production security checklist:
+- Review all IAM policies and roles
+- Verify WAF rules are active and logging
+- Confirm all data is encrypted at rest and in transit
+- Test disaster recovery procedures
+- Schedule security audits and penetration testing
+Description: ApexShare prod - Serverless video sharing infrastructure
+Resources:
+  UploadHandlerDLQEA607B18:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: alias/aws/sqs
+      MessageRetentionPeriod: 1209600
+      QueueName: UploadHandlerDLQ-prod
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/UploadHandlerDLQ/Resource
+  DownloadHandlerDLQ42A8399B:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: alias/aws/sqs
+      MessageRetentionPeriod: 1209600
+      QueueName: DownloadHandlerDLQ-prod
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/DownloadHandlerDLQ/Resource
+  EmailSenderDLQA8E85D2F:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: alias/aws/sqs
+      MessageRetentionPeriod: 1209600
+      QueueName: EmailSenderDLQ-prod
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/EmailSenderDLQ/Resource
+  UploadHandlerLogGroupD30B0C8D:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/apexshare-upload-handler-prod
+      RetentionInDays: 14
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/UploadHandlerLogGroup/Resource
+  UploadHandlerServiceRole8CD4AA9A:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/UploadHandler/ServiceRole/Resource
+  UploadHandlerServiceRoleDefaultPolicy63BF30CF:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: sqs:SendMessage
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - UploadHandlerDLQEA607B18
+                - Arn
+          - Action:
+              - s3:Abort*
+              - s3:PutObject
+              - s3:PutObjectAcl
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionAcl
+              - s3:PutObjectVersionTagging
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttVideosBucket75F673EDArn12A3783B
+                  - /*
+          - Action:
+              - kms:Decrypt
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Effect: Allow
+            Resource:
+              Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttS3EncryptionKeyE102C1CFArn8D8FC4ED
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Effect: Allow
+            Resource:
+              Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttDynamoDBEncryptionKey74BF4528Arn568D2F81
+          - Action:
+              - dynamodb:BatchWriteItem
+              - dynamodb:DeleteItem
+              - dynamodb:DescribeTable
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Effect: Allow
+            Resource:
+              - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttUploadsTableFE9AB9DBArn838D3DB7
+              - Fn::Join:
+                  - ""
+                  - - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttUploadsTableFE9AB9DBArn838D3DB7
+                    - /index/*
+        Version: "2012-10-17"
+      PolicyName: UploadHandlerServiceRoleDefaultPolicy63BF30CF
+      Roles:
+        - Ref: UploadHandlerServiceRole8CD4AA9A
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/UploadHandler/ServiceRole/DefaultPolicy/Resource
+  UploadHandler4CB020C5:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-617476838628-eu-west-1
+        S3Key: d4fdf4fbc9f1ed91de1b4cfd4a6dc870f64e6a78ba90663f3477df8d009a359d.zip
+      DeadLetterConfig:
+        TargetArn:
+          Fn::GetAtt:
+            - UploadHandlerDLQEA607B18
+            - Arn
+      Environment:
+        Variables:
+          NODE_OPTIONS: --enable-source-maps
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+          S3_BUCKET_NAME:
+            Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputRefVideosBucket75F673EDE4BAF768
+          DYNAMODB_TABLE:
+            Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputRefUploadsTableFE9AB9DB426D5B83
+          CORS_ORIGINS: https://apexshare.be
+          LOG_LEVEL: WARN
+          MAX_FILE_SIZE: "5368709120"
+          ALLOWED_MIME_TYPES: video/mp4,video/quicktime,video/x-msvideo,video/x-matroska
+          PRESIGNED_URL_EXPIRY: "3600"
+      FunctionName: apexshare-upload-handler-prod
+      Handler: index.handler
+      KmsKeyArn:
+        Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttS3EncryptionKeyE102C1CFArn8D8FC4ED
+      LoggingConfig:
+        LogGroup:
+          Ref: UploadHandlerLogGroupD30B0C8D
+      MemorySize: 512
+      Role:
+        Fn::GetAtt:
+          - UploadHandlerServiceRole8CD4AA9A
+          - Arn
+      Runtime: nodejs20.x
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+      Timeout: 30
+    DependsOn:
+      - UploadHandlerServiceRoleDefaultPolicy63BF30CF
+      - UploadHandlerServiceRole8CD4AA9A
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/UploadHandler/Resource
+      aws:asset:path: asset.d4fdf4fbc9f1ed91de1b4cfd4a6dc870f64e6a78ba90663f3477df8d009a359d
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  UploadHandlerEventInvokeConfigCFF31E14:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName:
+        Ref: UploadHandler4CB020C5
+      MaximumEventAgeInSeconds: 3600
+      MaximumRetryAttempts: 2
+      Qualifier: $LATEST
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/UploadHandler/EventInvokeConfig/Resource
+  DownloadHandlerLogGroup2AEFC92B:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/apexshare-download-handler-prod
+      RetentionInDays: 14
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/DownloadHandlerLogGroup/Resource
+  DownloadHandlerServiceRole4B8FD2FF:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/DownloadHandler/ServiceRole/Resource
+  DownloadHandlerServiceRoleDefaultPolicy4A78C071:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: sqs:SendMessage
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - DownloadHandlerDLQ42A8399B
+                - Arn
+          - Action:
+              - s3:GetBucket*
+              - s3:GetObject*
+              - s3:List*
+            Effect: Allow
+            Resource:
+              - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttVideosBucket75F673EDArn12A3783B
+              - Fn::Join:
+                  - ""
+                  - - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttVideosBucket75F673EDArn12A3783B
+                    - /*
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+            Effect: Allow
+            Resource:
+              Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttS3EncryptionKeyE102C1CFArn8D8FC4ED
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Effect: Allow
+            Resource:
+              Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttDynamoDBEncryptionKey74BF4528Arn568D2F81
+          - Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:ConditionCheckItem
+              - dynamodb:DeleteItem
+              - dynamodb:DescribeTable
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:UpdateItem
+            Effect: Allow
+            Resource:
+              - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttUploadsTableFE9AB9DBArn838D3DB7
+              - Fn::Join:
+                  - ""
+                  - - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttUploadsTableFE9AB9DBArn838D3DB7
+                    - /index/*
+        Version: "2012-10-17"
+      PolicyName: DownloadHandlerServiceRoleDefaultPolicy4A78C071
+      Roles:
+        - Ref: DownloadHandlerServiceRole4B8FD2FF
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/DownloadHandler/ServiceRole/DefaultPolicy/Resource
+  DownloadHandler09CC40DB:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        ZipFile: "
+
+          \        exports.handler = async (event) => {
+
+          \          return {
+
+          \            statusCode: 200,
+
+          \            headers: { 'Content-Type': 'application/json' },
+
+          \            body: JSON.stringify({
+
+          \              message: 'Download handler placeholder - needs proper implementation',
+
+          \              event: event
+
+          \            })
+
+          \          };
+
+          \        };
+
+          \      "
+      DeadLetterConfig:
+        TargetArn:
+          Fn::GetAtt:
+            - DownloadHandlerDLQ42A8399B
+            - Arn
+      Environment:
+        Variables:
+          NODE_OPTIONS: --enable-source-maps
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+          S3_BUCKET_NAME:
+            Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputRefVideosBucket75F673EDE4BAF768
+          DYNAMODB_TABLE:
+            Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputRefUploadsTableFE9AB9DB426D5B83
+          CORS_ORIGINS: https://apexshare.be
+          LOG_LEVEL: WARN
+          DOWNLOAD_EXPIRY_HOURS: "86400"
+      FunctionName: apexshare-download-handler-prod
+      Handler: index.handler
+      KmsKeyArn:
+        Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttS3EncryptionKeyE102C1CFArn8D8FC4ED
+      LoggingConfig:
+        LogGroup:
+          Ref: DownloadHandlerLogGroup2AEFC92B
+      MemorySize: 512
+      Role:
+        Fn::GetAtt:
+          - DownloadHandlerServiceRole4B8FD2FF
+          - Arn
+      Runtime: nodejs20.x
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+      Timeout: 30
+    DependsOn:
+      - DownloadHandlerServiceRoleDefaultPolicy4A78C071
+      - DownloadHandlerServiceRole4B8FD2FF
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/DownloadHandler/Resource
+  DownloadHandlerEventInvokeConfigE7153C63:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName:
+        Ref: DownloadHandler09CC40DB
+      MaximumEventAgeInSeconds: 3600
+      MaximumRetryAttempts: 2
+      Qualifier: $LATEST
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/DownloadHandler/EventInvokeConfig/Resource
+  EmailSenderLogGroup4CCF6FFE:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/apexshare-email-sender-prod
+      RetentionInDays: 14
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/EmailSenderLogGroup/Resource
+  EmailSenderServiceRole1CE9DDD8:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/EmailSender/ServiceRole/Resource
+  EmailSenderServiceRoleDefaultPolicy2A5D9FAC:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: sqs:SendMessage
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - EmailSenderDLQA8E85D2F
+                - Arn
+          - Action:
+              - ses:SendEmail
+              - ses:SendRawEmail
+            Condition:
+              StringEquals:
+                ses:FromAddress: noreply@apexshare.be
+            Effect: Allow
+            Resource:
+              - arn:aws:ses:eu-west-1:617476838628:identity/apexshare.be
+              - arn:aws:ses:eu-west-1:617476838628:identity/noreply@apexshare.be
+          - Action:
+              - s3:GetBucket*
+              - s3:GetObject*
+              - s3:List*
+            Effect: Allow
+            Resource:
+              - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttTemplatesBucketB07CED20Arn1F49077B
+              - Fn::Join:
+                  - ""
+                  - - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttTemplatesBucketB07CED20Arn1F49077B
+                    - /*
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Effect: Allow
+            Resource:
+              Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttDynamoDBEncryptionKey74BF4528Arn568D2F81
+          - Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:ConditionCheckItem
+              - dynamodb:DeleteItem
+              - dynamodb:DescribeTable
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:UpdateItem
+            Effect: Allow
+            Resource:
+              - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttUploadsTableFE9AB9DBArn838D3DB7
+              - Fn::Join:
+                  - ""
+                  - - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttUploadsTableFE9AB9DBArn838D3DB7
+                    - /index/*
+        Version: "2012-10-17"
+      PolicyName: EmailSenderServiceRoleDefaultPolicy2A5D9FAC
+      Roles:
+        - Ref: EmailSenderServiceRole1CE9DDD8
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/EmailSender/ServiceRole/DefaultPolicy/Resource
+  EmailSender31E0F5CB:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        ZipFile: "
+
+          \        exports.handler = async (event) => {
+
+          \          return {
+
+          \            statusCode: 200,
+
+          \            headers: { 'Content-Type': 'application/json' },
+
+          \            body: JSON.stringify({
+
+          \              message: 'Email sender placeholder - needs proper implementation',
+
+          \              event: event
+
+          \            })
+
+          \          };
+
+          \        };
+
+          \      "
+      DeadLetterConfig:
+        TargetArn:
+          Fn::GetAtt:
+            - EmailSenderDLQA8E85D2F
+            - Arn
+      Environment:
+        Variables:
+          NODE_OPTIONS: --enable-source-maps
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+          DYNAMODB_TABLE:
+            Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputRefUploadsTableFE9AB9DB426D5B83
+          TEMPLATES_BUCKET:
+            Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputRefTemplatesBucketB07CED205AE81E25
+          SES_FROM_EMAIL: noreply@apexshare.be
+          SES_REGION: eu-west-1
+          DOWNLOAD_BASE_URL: https://apexshare.be/download
+          LOG_LEVEL: WARN
+      FunctionName: apexshare-email-sender-prod
+      Handler: index.handler
+      KmsKeyArn:
+        Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttDynamoDBEncryptionKey74BF4528Arn568D2F81
+      LoggingConfig:
+        LogGroup:
+          Ref: EmailSenderLogGroup4CCF6FFE
+      MemorySize: 1024
+      Role:
+        Fn::GetAtt:
+          - EmailSenderServiceRole1CE9DDD8
+          - Arn
+      Runtime: nodejs20.x
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+      Timeout: 120
+    DependsOn:
+      - EmailSenderServiceRoleDefaultPolicy2A5D9FAC
+      - EmailSenderServiceRole1CE9DDD8
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/EmailSender/Resource
+  EmailSenderEventInvokeConfigB34FFD1F:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName:
+        Ref: EmailSender31E0F5CB
+      MaximumEventAgeInSeconds: 7200
+      MaximumRetryAttempts: 2
+      Qualifier: $LATEST
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/EmailSender/EventInvokeConfig/Resource
+  HealthCheckHandlerLogGroup098B35D7:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/apexshare-health-check-prod
+      RetentionInDays: 7
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/HealthCheckHandlerLogGroup/Resource
+  HealthCheckHandlerServiceRole7A4E6C76:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/HealthCheckHandler/ServiceRole/Resource
+  HealthCheckHandler608D5DAE:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        ZipFile: "
+
+          \        exports.handler = async (event) => {
+
+          \          return {
+
+          \            statusCode: 200,
+
+          \            headers: {
+
+          \              'Content-Type': 'application/json',
+
+          \              'Access-Control-Allow-Origin': '*',
+
+          \            },
+
+          \            body: JSON.stringify({
+
+          \              status: 'healthy',
+
+          \              version: '1.0.0',
+
+          \              timestamp: new Date().toISOString(),
+
+          \              environment: process.env.ENVIRONMENT || 'unknown',
+
+          \            }),
+
+          \          };
+
+          \        };
+
+          \      "
+      Environment:
+        Variables:
+          ENVIRONMENT: prod
+      FunctionName: apexshare-health-check-prod
+      Handler: index.handler
+      LoggingConfig:
+        LogGroup:
+          Ref: HealthCheckHandlerLogGroup098B35D7
+      MemorySize: 128
+      Role:
+        Fn::GetAtt:
+          - HealthCheckHandlerServiceRole7A4E6C76
+          - Arn
+      Runtime: nodejs20.x
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+      Timeout: 10
+    DependsOn:
+      - HealthCheckHandlerServiceRole7A4E6C76
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/HealthCheckHandler/Resource
+  AuthHandlerLogGroup7AFBF8F0:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/apexshare-auth-handler-prod
+      RetentionInDays: 14
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/AuthHandlerLogGroup/Resource
+  AuthHandlerServiceRoleD970A3A9:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/AuthHandler/ServiceRole/Resource
+  AuthHandler9DC767B7:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-617476838628-eu-west-1
+        S3Key: 2927a62e512e02e3cfb1b9727dae15f142887bd2029762dce451a48aea500426.zip
+      Environment:
+        Variables:
+          NODE_OPTIONS: --enable-source-maps
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+          CORS_ORIGINS: https://apexshare.be
+          LOG_LEVEL: WARN
+          JWT_SECRET: apexshare-jwt-secret-prod-1758468270353
+          NODE_ENV: prod
+      FunctionName: apexshare-auth-handler-prod
+      Handler: index.handler
+      LoggingConfig:
+        LogGroup:
+          Ref: AuthHandlerLogGroup7AFBF8F0
+      MemorySize: 256
+      Role:
+        Fn::GetAtt:
+          - AuthHandlerServiceRoleD970A3A9
+          - Arn
+      Runtime: nodejs20.x
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+      Timeout: 30
+    DependsOn:
+      - AuthHandlerServiceRoleD970A3A9
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/AuthHandler/Resource
+      aws:asset:path: asset.2927a62e512e02e3cfb1b9727dae15f142887bd2029762dce451a48aea500426
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  AuthHandlerEventInvokeConfigC6F39C8A:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName:
+        Ref: AuthHandler9DC767B7
+      MaximumEventAgeInSeconds: 3600
+      MaximumRetryAttempts: 2
+      Qualifier: $LATEST
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/AuthHandler/EventInvokeConfig/Resource
+  SessionsHandlerLogGroup0523A52D:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/apexshare-sessions-handler-prod
+      RetentionInDays: 14
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/SessionsHandlerLogGroup/Resource
+  SessionsHandlerServiceRoleD26433F9:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/SessionsHandler/ServiceRole/Resource
+  SessionsHandlerServiceRoleDefaultPolicyAAC4EC7E:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Effect: Allow
+            Resource:
+              Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttDynamoDBEncryptionKey74BF4528Arn568D2F81
+          - Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:ConditionCheckItem
+              - dynamodb:DeleteItem
+              - dynamodb:DescribeTable
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:UpdateItem
+            Effect: Allow
+            Resource:
+              - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttUploadsTableFE9AB9DBArn838D3DB7
+              - Fn::Join:
+                  - ""
+                  - - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttUploadsTableFE9AB9DBArn838D3DB7
+                    - /index/*
+        Version: "2012-10-17"
+      PolicyName: SessionsHandlerServiceRoleDefaultPolicyAAC4EC7E
+      Roles:
+        - Ref: SessionsHandlerServiceRoleD26433F9
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/SessionsHandler/ServiceRole/DefaultPolicy/Resource
+  SessionsHandler0955C787:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-617476838628-eu-west-1
+        S3Key: 75eeb0e94c58e09eaa606ae9997183cf2201024875ebe785f4c4b4f6135bebdf.zip
+      Environment:
+        Variables:
+          NODE_OPTIONS: --enable-source-maps
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+          DYNAMODB_TABLE:
+            Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputRefUploadsTableFE9AB9DB426D5B83
+          CORS_ORIGINS: https://apexshare.be
+          LOG_LEVEL: WARN
+          NODE_ENV: prod
+      FunctionName: apexshare-sessions-handler-prod
+      Handler: index.handler
+      KmsKeyArn:
+        Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttDynamoDBEncryptionKey74BF4528Arn568D2F81
+      LoggingConfig:
+        LogGroup:
+          Ref: SessionsHandlerLogGroup0523A52D
+      MemorySize: 256
+      Role:
+        Fn::GetAtt:
+          - SessionsHandlerServiceRoleD26433F9
+          - Arn
+      Runtime: nodejs20.x
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+      Timeout: 30
+    DependsOn:
+      - SessionsHandlerServiceRoleDefaultPolicyAAC4EC7E
+      - SessionsHandlerServiceRoleD26433F9
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/SessionsHandler/Resource
+      aws:asset:path: asset.75eeb0e94c58e09eaa606ae9997183cf2201024875ebe785f4c4b4f6135bebdf
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  SessionsHandlerEventInvokeConfigFC53C1AA:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName:
+        Ref: SessionsHandler0955C787
+      MaximumEventAgeInSeconds: 3600
+      MaximumRetryAttempts: 2
+      Qualifier: $LATEST
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/SessionsHandler/EventInvokeConfig/Resource
+  AnalyticsHandlerLogGroupE5451452:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/apexshare-analytics-handler-prod
+      RetentionInDays: 14
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/AnalyticsHandlerLogGroup/Resource
+  AnalyticsHandlerServiceRole3658EDAF:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/AnalyticsHandler/ServiceRole/Resource
+  AnalyticsHandlerServiceRoleDefaultPolicyB4649C6D:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+            Effect: Allow
+            Resource:
+              Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttDynamoDBEncryptionKey74BF4528Arn568D2F81
+          - Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:ConditionCheckItem
+              - dynamodb:DescribeTable
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:Query
+              - dynamodb:Scan
+            Effect: Allow
+            Resource:
+              - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttUploadsTableFE9AB9DBArn838D3DB7
+              - Fn::Join:
+                  - ""
+                  - - Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputFnGetAttUploadsTableFE9AB9DBArn838D3DB7
+                    - /index/*
+        Version: "2012-10-17"
+      PolicyName: AnalyticsHandlerServiceRoleDefaultPolicyB4649C6D
+      Roles:
+        - Ref: AnalyticsHandlerServiceRole3658EDAF
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/AnalyticsHandler/ServiceRole/DefaultPolicy/Resource
+  AnalyticsHandlerF43C4325:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-617476838628-eu-west-1
+        S3Key: c0b787b4dbdcfdef1f703f26e1da7eee88482daecac737693e15a4c5689eb410.zip
+      Environment:
+        Variables:
+          NODE_OPTIONS: --enable-source-maps
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+          DYNAMODB_TABLE:
+            Fn::ImportValue: ApexShare-Storage-prod:ExportsOutputRefUploadsTableFE9AB9DB426D5B83
+          CORS_ORIGINS: https://apexshare.be
+          LOG_LEVEL: WARN
+          NODE_ENV: prod
+      FunctionName: apexshare-analytics-handler-prod
+      Handler: index.handler
+      KmsKeyArn:
+        Fn::ImportValue: ApexShare-Security-prod:ExportsOutputFnGetAttDynamoDBEncryptionKey74BF4528Arn568D2F81
+      LoggingConfig:
+        LogGroup:
+          Ref: AnalyticsHandlerLogGroupE5451452
+      MemorySize: 256
+      Role:
+        Fn::GetAtt:
+          - AnalyticsHandlerServiceRole3658EDAF
+          - Arn
+      Runtime: nodejs20.x
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+      Timeout: 30
+    DependsOn:
+      - AnalyticsHandlerServiceRoleDefaultPolicyB4649C6D
+      - AnalyticsHandlerServiceRole3658EDAF
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/AnalyticsHandler/Resource
+      aws:asset:path: asset.c0b787b4dbdcfdef1f703f26e1da7eee88482daecac737693e15a4c5689eb410
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  AnalyticsHandlerEventInvokeConfig72E3A46D:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName:
+        Ref: AnalyticsHandlerF43C4325
+      MaximumEventAgeInSeconds: 3600
+      MaximumRetryAttempts: 2
+      Qualifier: $LATEST
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/AnalyticsHandler/EventInvokeConfig/Resource
+  ApiGatewayLogGroupA9770429:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/apigateway/apexshare-api-prod
+      RetentionInDays: 30
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApiGatewayLogGroup/Resource
+  ApexShareApi28F89377:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: ApexShare API - prod environment
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Name: apexshare-api-prod
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Resource
+  ApexShareApiCloudWatchRoleE916B0D0:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/CloudWatchRole/Resource
+  ApexShareApiAccountF71532D0:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn:
+        Fn::GetAtt:
+          - ApexShareApiCloudWatchRoleE916B0D0
+          - Arn
+    DependsOn:
+      - ApexShareApi28F89377
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Account
+  ApexShareApiDeployment4FBA0FF8368d3069c551832e71f66a1ddcaad53e:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: Deployment with corrected base path mapping - 2025-09-21T15:24:31.354Z
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    DependsOn:
+      - ApexShareApianalyticseventsOPTIONSCBAA8B46
+      - ApexShareApianalyticseventsPOSTC6AA20E7
+      - ApexShareApianalyticsevents3308B607
+      - ApexShareApianalyticsOPTIONSC137C62D
+      - ApexShareApianalytics9A324443
+      - ApexShareApianalyticsusageGETC53B4D08
+      - ApexShareApianalyticsusageOPTIONS1F9677F8
+      - ApexShareApianalyticsusageCAF23851
+      - ApexShareApiauthloginOPTIONS090A0251
+      - ApexShareApiauthloginPOSTF2722948
+      - ApexShareApiauthloginF6302C6C
+      - ApexShareApiauthlogoutOPTIONS3F2505A1
+      - ApexShareApiauthlogoutPOSTDF2A0170
+      - ApexShareApiauthlogoutBBE2CB90
+      - ApexShareApiauthmeGETC0B06169
+      - ApexShareApiauthmeOPTIONS6A975095
+      - ApexShareApiauthme2977B894
+      - ApexShareApiauthOPTIONS909680E2
+      - ApexShareApiauthBA9AA536
+      - ApexShareApidownloadsfileIdGET71B40D65
+      - ApexShareApidownloadsfileIdOPTIONSD72C2ADA
+      - ApexShareApidownloadsfileId328A70B8
+      - ApexShareApidownloadsOPTIONS0A44C828
+      - ApexShareApidownloadsD28684FA
+      - ApexShareApihealthGETABD8079A
+      - ApexShareApihealthOPTIONSA2704D45
+      - ApexShareApihealth019A5B84
+      - ApexShareApiOPTIONS3A49A6A5
+      - ApexShareApisessionssessionIdDELETEA1869FE8
+      - ApexShareApisessionssessionIdGETF4CAB106
+      - ApexShareApisessionssessionIdOPTIONS09146B49
+      - ApexShareApisessionssessionIdPUTF3CB40FB
+      - ApexShareApisessionssessionIdF24D6B8A
+      - ApexShareApisessionssessionIduploadOPTIONSD643409F
+      - ApexShareApisessionssessionIduploadPOSTFAD0FA17
+      - ApexShareApisessionssessionIduploadAD3D1B17
+      - ApexShareApisessionsGET99AF6F16
+      - ApexShareApisessionsOPTIONS20553E0B
+      - ApexShareApisessionsPOSTB00B5783
+      - ApexShareApisessions1647A82A
+      - ApexShareApiuploadsinitiateOPTIONSE381D268
+      - ApexShareApiuploadsinitiatePOST1CD5C530
+      - ApexShareApiuploadsinitiate6997F61B
+      - ApexShareApiuploadsOPTIONSA8ED1A9A
+      - ApexShareApiuploadsrecentGET761A5C17
+      - ApexShareApiuploadsrecentOPTIONSCF9B1679
+      - ApexShareApiuploadsrecentFE9DD4B1
+      - ApexShareApiuploads2E03BDC1
+      - ApexShareApiRequestValidator1B4BE450
+      - ApexShareApiSessionUploadRequestModel974E6579
+      - ApexShareApiUploadRequestModelC9E2F174
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Deployment/Resource
+      aws:cdk:do-not-refactor: true
+  ApexShareApiDeploymentStagev184738141:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      AccessLogSetting:
+        DestinationArn:
+          Fn::GetAtt:
+            - ApiGatewayLogGroupA9770429
+            - Arn
+        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","user":"$context.identity.user","caller":"$context.identity.caller","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength"}'
+      DeploymentId:
+        Ref: ApexShareApiDeployment4FBA0FF8368d3069c551832e71f66a1ddcaad53e
+      Description: Deployment with corrected base path mapping - 2025-09-21T15:24:31.354Z
+      MethodSettings:
+        - DataTraceEnabled: false
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          MetricsEnabled: true
+          ResourcePath: /*
+          ThrottlingBurstLimit: 500
+          ThrottlingRateLimit: 100
+      RestApiId:
+        Ref: ApexShareApi28F89377
+      StageName: v1
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    DependsOn:
+      - ApexShareApiAccountF71532D0
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/DeploymentStage.v1/Resource
+  ApexShareApiOPTIONS3A49A6A5:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Fn::GetAtt:
+          - ApexShareApi28F89377
+          - RootResourceId
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/OPTIONS/Resource
+  ApexShareApihealth019A5B84:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - ApexShareApi28F89377
+          - RootResourceId
+      PathPart: health
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/health/Resource
+  ApexShareApihealthOPTIONSA2704D45:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApihealth019A5B84
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/health/OPTIONS/Resource
+  ApexShareApihealthGETApiPermissionApexShareAPIprodApexShareApi62DD788DGEThealth9847254A:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - HealthCheckHandler608D5DAE
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /GET/health
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/health/GET/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.GET..health
+  ApexShareApihealthGETApiPermissionTestApexShareAPIprodApexShareApi62DD788DGEThealth4EB80293:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - HealthCheckHandler608D5DAE
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/GET/health
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/health/GET/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.GET..health
+  ApexShareApihealthGETABD8079A:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - HealthCheckHandler608D5DAE
+                  - Arn
+              - /invocations
+      ResourceId:
+        Ref: ApexShareApihealth019A5B84
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/health/GET/Resource
+  ApexShareApiauthBA9AA536:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - ApexShareApi28F89377
+          - RootResourceId
+      PathPart: auth
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/Resource
+  ApexShareApiauthOPTIONS909680E2:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApiauthBA9AA536
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/OPTIONS/Resource
+  ApexShareApiauthloginF6302C6C:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: ApexShareApiauthBA9AA536
+      PathPart: login
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/login/Resource
+  ApexShareApiauthloginOPTIONS090A0251:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApiauthloginF6302C6C
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/login/OPTIONS/Resource
+  ApexShareApiauthloginPOSTApiPermissionApexShareAPIprodApexShareApi62DD788DPOSTauthlogin81D3247A:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - AuthHandler9DC767B7
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /POST/auth/login
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/login/POST/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.POST..auth.login
+  ApexShareApiauthloginPOSTApiPermissionTestApexShareAPIprodApexShareApi62DD788DPOSTauthloginAEACE49A:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - AuthHandler9DC767B7
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/POST/auth/login
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/login/POST/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.POST..auth.login
+  ApexShareApiauthloginPOSTF2722948:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - AuthHandler9DC767B7
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "400"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "401"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      ResourceId:
+        Ref: ApexShareApiauthloginF6302C6C
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/login/POST/Resource
+  ApexShareApiauthme2977B894:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: ApexShareApiauthBA9AA536
+      PathPart: me
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/me/Resource
+  ApexShareApiauthmeOPTIONS6A975095:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApiauthme2977B894
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/me/OPTIONS/Resource
+  ApexShareApiauthmeGETApiPermissionApexShareAPIprodApexShareApi62DD788DGETauthmeF7EE4AFA:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - AuthHandler9DC767B7
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /GET/auth/me
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/me/GET/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.GET..auth.me
+  ApexShareApiauthmeGETApiPermissionTestApexShareAPIprodApexShareApi62DD788DGETauthme7F033DDC:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - AuthHandler9DC767B7
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/GET/auth/me
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/me/GET/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.GET..auth.me
+  ApexShareApiauthmeGETC0B06169:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - AuthHandler9DC767B7
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "401"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "404"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      ResourceId:
+        Ref: ApexShareApiauthme2977B894
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/me/GET/Resource
+  ApexShareApiauthlogoutBBE2CB90:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: ApexShareApiauthBA9AA536
+      PathPart: logout
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/logout/Resource
+  ApexShareApiauthlogoutOPTIONS3F2505A1:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApiauthlogoutBBE2CB90
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/logout/OPTIONS/Resource
+  ApexShareApiauthlogoutPOSTApiPermissionApexShareAPIprodApexShareApi62DD788DPOSTauthlogout49100D74:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - AuthHandler9DC767B7
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /POST/auth/logout
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/logout/POST/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.POST..auth.logout
+  ApexShareApiauthlogoutPOSTApiPermissionTestApexShareAPIprodApexShareApi62DD788DPOSTauthlogout1B8503E3:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - AuthHandler9DC767B7
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/POST/auth/logout
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/logout/POST/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.POST..auth.logout
+  ApexShareApiauthlogoutPOSTDF2A0170:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - AuthHandler9DC767B7
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      ResourceId:
+        Ref: ApexShareApiauthlogoutBBE2CB90
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/auth/logout/POST/Resource
+  ApexShareApiuploads2E03BDC1:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - ApexShareApi28F89377
+          - RootResourceId
+      PathPart: uploads
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/Resource
+  ApexShareApiuploadsOPTIONSA8ED1A9A:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApiuploads2E03BDC1
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/OPTIONS/Resource
+  ApexShareApiuploadsinitiate6997F61B:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: ApexShareApiuploads2E03BDC1
+      PathPart: initiate
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/initiate/Resource
+  ApexShareApiuploadsinitiateOPTIONSE381D268:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApiuploadsinitiate6997F61B
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/initiate/OPTIONS/Resource
+  ApexShareApiuploadsinitiatePOSTApiPermissionApexShareAPIprodApexShareApi62DD788DPOSTuploadsinitiate0EE3D590:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - UploadHandler4CB020C5
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /POST/uploads/initiate
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/initiate/POST/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.POST..uploads.initiate
+  ApexShareApiuploadsinitiatePOSTApiPermissionTestApexShareAPIprodApexShareApi62DD788DPOSTuploadsinitiate32F14BBD:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - UploadHandler4CB020C5
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/POST/uploads/initiate
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/initiate/POST/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.POST..uploads.initiate
+  ApexShareApiuploadsinitiatePOST1CD5C530:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - UploadHandler4CB020C5
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "400"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      RequestModels:
+        application/json:
+          Ref: ApexShareApiUploadRequestModelC9E2F174
+      RequestValidatorId:
+        Ref: ApexShareApiRequestValidator1B4BE450
+      ResourceId:
+        Ref: ApexShareApiuploadsinitiate6997F61B
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/initiate/POST/Resource
+  ApexShareApiuploadsrecentFE9DD4B1:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: ApexShareApiuploads2E03BDC1
+      PathPart: recent
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/recent/Resource
+  ApexShareApiuploadsrecentOPTIONSCF9B1679:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApiuploadsrecentFE9DD4B1
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/recent/OPTIONS/Resource
+  ApexShareApiuploadsrecentGETApiPermissionApexShareAPIprodApexShareApi62DD788DGETuploadsrecentDFDDBC48:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - UploadHandler4CB020C5
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /GET/uploads/recent
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/recent/GET/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.GET..uploads.recent
+  ApexShareApiuploadsrecentGETApiPermissionTestApexShareAPIprodApexShareApi62DD788DGETuploadsrecentCD3380EC:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - UploadHandler4CB020C5
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/GET/uploads/recent
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/recent/GET/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.GET..uploads.recent
+  ApexShareApiuploadsrecentGET761A5C17:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - UploadHandler4CB020C5
+                  - Arn
+              - /invocations
+      ResourceId:
+        Ref: ApexShareApiuploadsrecentFE9DD4B1
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/uploads/recent/GET/Resource
+  ApexShareApidownloadsD28684FA:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - ApexShareApi28F89377
+          - RootResourceId
+      PathPart: downloads
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/downloads/Resource
+  ApexShareApidownloadsOPTIONS0A44C828:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApidownloadsD28684FA
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/downloads/OPTIONS/Resource
+  ApexShareApidownloadsfileId328A70B8:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: ApexShareApidownloadsD28684FA
+      PathPart: "{fileId}"
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/downloads/{fileId}/Resource
+  ApexShareApidownloadsfileIdOPTIONSD72C2ADA:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApidownloadsfileId328A70B8
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/downloads/{fileId}/OPTIONS/Resource
+  ApexShareApidownloadsfileIdGETApiPermissionApexShareAPIprodApexShareApi62DD788DGETdownloadsfileIdA01FEFDE:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - DownloadHandler09CC40DB
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /GET/downloads/*
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/downloads/{fileId}/GET/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.GET..downloads.{fileId}
+  ApexShareApidownloadsfileIdGETApiPermissionTestApexShareAPIprodApexShareApi62DD788DGETdownloadsfileIdB0275EBD:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - DownloadHandler09CC40DB
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/GET/downloads/*
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/downloads/{fileId}/GET/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.GET..downloads.{fileId}
+  ApexShareApidownloadsfileIdGET71B40D65:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - DownloadHandler09CC40DB
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "404"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "410"
+      RequestParameters:
+        method.request.path.fileId: true
+      ResourceId:
+        Ref: ApexShareApidownloadsfileId328A70B8
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/downloads/{fileId}/GET/Resource
+  ApexShareApisessions1647A82A:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - ApexShareApi28F89377
+          - RootResourceId
+      PathPart: sessions
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/Resource
+  ApexShareApisessionsOPTIONS20553E0B:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApisessions1647A82A
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/OPTIONS/Resource
+  ApexShareApisessionsGETApiPermissionApexShareAPIprodApexShareApi62DD788DGETsessions79A401BC:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - SessionsHandler0955C787
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /GET/sessions
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/GET/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.GET..sessions
+  ApexShareApisessionsGETApiPermissionTestApexShareAPIprodApexShareApi62DD788DGETsessions669515E4:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - SessionsHandler0955C787
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/GET/sessions
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/GET/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.GET..sessions
+  ApexShareApisessionsGET99AF6F16:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - SessionsHandler0955C787
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "401"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      RequestParameters:
+        method.request.querystring.limit: false
+        method.request.querystring.offset: false
+      ResourceId:
+        Ref: ApexShareApisessions1647A82A
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/GET/Resource
+  ApexShareApisessionsPOSTApiPermissionApexShareAPIprodApexShareApi62DD788DPOSTsessions8A9EE4D1:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - SessionsHandler0955C787
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /POST/sessions
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/POST/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.POST..sessions
+  ApexShareApisessionsPOSTApiPermissionTestApexShareAPIprodApexShareApi62DD788DPOSTsessionsBB869B39:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - SessionsHandler0955C787
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/POST/sessions
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/POST/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.POST..sessions
+  ApexShareApisessionsPOSTB00B5783:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - SessionsHandler0955C787
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "201"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "400"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "401"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      ResourceId:
+        Ref: ApexShareApisessions1647A82A
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/POST/Resource
+  ApexShareApisessionssessionIdF24D6B8A:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: ApexShareApisessions1647A82A
+      PathPart: "{sessionId}"
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/Resource
+  ApexShareApisessionssessionIdOPTIONS09146B49:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApisessionssessionIdF24D6B8A
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/OPTIONS/Resource
+  ApexShareApisessionssessionIdGETApiPermissionApexShareAPIprodApexShareApi62DD788DGETsessionssessionIdA9376B54:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - SessionsHandler0955C787
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /GET/sessions/*
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/GET/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.GET..sessions.{sessionId}
+  ApexShareApisessionssessionIdGETApiPermissionTestApexShareAPIprodApexShareApi62DD788DGETsessionssessionId733381B3:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - SessionsHandler0955C787
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/GET/sessions/*
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/GET/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.GET..sessions.{sessionId}
+  ApexShareApisessionssessionIdGETF4CAB106:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - SessionsHandler0955C787
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "401"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "404"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      RequestParameters:
+        method.request.path.sessionId: true
+      ResourceId:
+        Ref: ApexShareApisessionssessionIdF24D6B8A
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/GET/Resource
+  ApexShareApisessionssessionIdPUTApiPermissionApexShareAPIprodApexShareApi62DD788DPUTsessionssessionId6CD37FB5:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - SessionsHandler0955C787
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /PUT/sessions/*
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/PUT/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.PUT..sessions.{sessionId}
+  ApexShareApisessionssessionIdPUTApiPermissionTestApexShareAPIprodApexShareApi62DD788DPUTsessionssessionId18AFF532:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - SessionsHandler0955C787
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/PUT/sessions/*
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/PUT/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.PUT..sessions.{sessionId}
+  ApexShareApisessionssessionIdPUTF3CB40FB:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: PUT
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - SessionsHandler0955C787
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "400"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "401"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "404"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      RequestParameters:
+        method.request.path.sessionId: true
+      ResourceId:
+        Ref: ApexShareApisessionssessionIdF24D6B8A
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/PUT/Resource
+  ApexShareApisessionssessionIdDELETEApiPermissionApexShareAPIprodApexShareApi62DD788DDELETEsessionssessionIdC3E1148E:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - SessionsHandler0955C787
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /DELETE/sessions/*
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/DELETE/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.DELETE..sessions.{sessionId}
+  ApexShareApisessionssessionIdDELETEApiPermissionTestApexShareAPIprodApexShareApi62DD788DDELETEsessionssessionIdAB255C9C:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - SessionsHandler0955C787
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/DELETE/sessions/*
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/DELETE/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.DELETE..sessions.{sessionId}
+  ApexShareApisessionssessionIdDELETEA1869FE8:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: DELETE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - SessionsHandler0955C787
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "401"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "404"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      RequestParameters:
+        method.request.path.sessionId: true
+      ResourceId:
+        Ref: ApexShareApisessionssessionIdF24D6B8A
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/DELETE/Resource
+  ApexShareApisessionssessionIduploadAD3D1B17:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: ApexShareApisessionssessionIdF24D6B8A
+      PathPart: upload
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/upload/Resource
+  ApexShareApisessionssessionIduploadOPTIONSD643409F:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApisessionssessionIduploadAD3D1B17
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/upload/OPTIONS/Resource
+  ApexShareApisessionssessionIduploadPOSTApiPermissionApexShareAPIprodApexShareApi62DD788DPOSTsessionssessionIduploadAC24D318:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - UploadHandler4CB020C5
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /POST/sessions/*/upload
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/upload/POST/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.POST..sessions.{sessionId}.upload
+  ApexShareApisessionssessionIduploadPOSTApiPermissionTestApexShareAPIprodApexShareApi62DD788DPOSTsessionssessionIdupload27A8A1FE:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - UploadHandler4CB020C5
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/POST/sessions/*/upload
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/upload/POST/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.POST..sessions.{sessionId}.upload
+  ApexShareApisessionssessionIduploadPOSTFAD0FA17:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - UploadHandler4CB020C5
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "400"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "404"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      RequestModels:
+        application/json:
+          Ref: ApexShareApiSessionUploadRequestModel974E6579
+      RequestParameters:
+        method.request.path.sessionId: true
+      RequestValidatorId:
+        Ref: ApexShareApiRequestValidator1B4BE450
+      ResourceId:
+        Ref: ApexShareApisessionssessionIduploadAD3D1B17
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/sessions/{sessionId}/upload/POST/Resource
+  ApexShareApianalytics9A324443:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - ApexShareApi28F89377
+          - RootResourceId
+      PathPart: analytics
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/Resource
+  ApexShareApianalyticsOPTIONSC137C62D:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApianalytics9A324443
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/OPTIONS/Resource
+  ApexShareApianalyticsusageCAF23851:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: ApexShareApianalytics9A324443
+      PathPart: usage
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/usage/Resource
+  ApexShareApianalyticsusageOPTIONS1F9677F8:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApianalyticsusageCAF23851
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/usage/OPTIONS/Resource
+  ApexShareApianalyticsusageGETApiPermissionApexShareAPIprodApexShareApi62DD788DGETanalyticsusage4374F198:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - AnalyticsHandlerF43C4325
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /GET/analytics/usage
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/usage/GET/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.GET..analytics.usage
+  ApexShareApianalyticsusageGETApiPermissionTestApexShareAPIprodApexShareApi62DD788DGETanalyticsusage2B0FA377:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - AnalyticsHandlerF43C4325
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/GET/analytics/usage
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/usage/GET/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.GET..analytics.usage
+  ApexShareApianalyticsusageGETC53B4D08:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - AnalyticsHandlerF43C4325
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "401"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      RequestParameters:
+        method.request.querystring.period: false
+      ResourceId:
+        Ref: ApexShareApianalyticsusageCAF23851
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/usage/GET/Resource
+  ApexShareApianalyticsevents3308B607:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref: ApexShareApianalytics9A324443
+      PathPart: events
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/events/Resource
+  ApexShareApianalyticseventsOPTIONSCBAA8B46:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-Auth-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'https://apexshare.be'"
+              method.response.header.Vary: "'Origin'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Max-Age: "'3000'"
+              method.response.header.Access-Control-Expose-Headers: "'ETag,x-amz-version-id'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Vary: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Max-Age: true
+            method.response.header.Access-Control-Expose-Headers: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: ApexShareApianalyticsevents3308B607
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/events/OPTIONS/Resource
+  ApexShareApianalyticseventsPOSTApiPermissionApexShareAPIprodApexShareApi62DD788DPOSTanalyticseventsC5C1F188:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - AnalyticsHandlerF43C4325
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /
+            - Ref: ApexShareApiDeploymentStagev184738141
+            - /POST/analytics/events
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/events/POST/ApiPermission.ApexShareAPIprodApexShareApi62DD788D.POST..analytics.events
+  ApexShareApianalyticseventsPOSTApiPermissionTestApexShareAPIprodApexShareApi62DD788DPOSTanalyticseventsFF08DD5A:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - AnalyticsHandlerF43C4325
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:aws:execute-api:eu-west-1:617476838628:"
+            - Ref: ApexShareApi28F89377
+            - /test-invoke-stage/POST/analytics/events
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/events/POST/ApiPermission.Test.ApexShareAPIprodApexShareApi62DD788D.POST..analytics.events
+  ApexShareApianalyticseventsPOSTC6AA20E7:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - AnalyticsHandlerF43C4325
+                  - Arn
+              - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "401"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "500"
+      ResourceId:
+        Ref: ApexShareApianalyticsevents3308B607
+      RestApiId:
+        Ref: ApexShareApi28F89377
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/Default/analytics/events/POST/Resource
+  ApexShareApiRequestValidator1B4BE450:
+    Type: AWS::ApiGateway::RequestValidator
+    Properties:
+      RestApiId:
+        Ref: ApexShareApi28F89377
+      ValidateRequestBody: true
+      ValidateRequestParameters: true
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/RequestValidator/Resource
+  ApexShareApiUploadRequestModelC9E2F174:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      ContentType: application/json
+      RestApiId:
+        Ref: ApexShareApi28F89377
+      Schema:
+        type: object
+        properties:
+          studentEmail:
+            type: string
+            pattern: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+            maxLength: 255
+          studentName:
+            type: string
+            pattern: ^[a-zA-Z0-9\s\-\.]{1,100}$
+            maxLength: 100
+          trainerName:
+            type: string
+            pattern: ^[a-zA-Z0-9\s\-\.]{1,100}$
+            maxLength: 100
+          sessionDate:
+            type: string
+            pattern: ^\d{4}-\d{2}-\d{2}$
+          notes:
+            type: string
+            maxLength: 1000
+          fileName:
+            type: string
+            pattern: ^[a-zA-Z0-9\s\-\._]{1,255}\.(mp4|mov|avi|mkv)$
+            maxLength: 255
+          fileSize:
+            type: integer
+            minimum: 1
+            maximum: 5368709120
+          contentType:
+            type: string
+            enum:
+              - video/mp4
+              - video/quicktime
+              - video/x-msvideo
+              - video/x-matroska
+          mimeType:
+            type: string
+            enum:
+              - video/mp4
+              - video/quicktime
+              - video/x-msvideo
+              - video/x-matroska
+        required:
+          - studentEmail
+          - fileName
+          - fileSize
+          - contentType
+        additionalProperties: false
+        $schema: http://json-schema.org/draft-04/schema#
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/UploadRequestModel/Resource
+  ApexShareApiSessionUploadRequestModel974E6579:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      ContentType: application/json
+      RestApiId:
+        Ref: ApexShareApi28F89377
+      Schema:
+        type: object
+        properties:
+          fileName:
+            type: string
+            pattern: ^[a-zA-Z0-9\s\-\._]{1,255}\.(mp4|mov|avi|mkv)$
+            maxLength: 255
+          fileSize:
+            type: integer
+            minimum: 1
+            maximum: 5368709120
+          contentType:
+            type: string
+            enum:
+              - video/mp4
+              - video/quicktime
+              - video/x-msvideo
+              - video/x-matroska
+        required:
+          - fileName
+          - fileSize
+          - contentType
+        additionalProperties: false
+        $schema: http://json-schema.org/draft-04/schema#
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApexShareApi/SessionUploadRequestModel/Resource
+  ApiCustomDomain9620A9CE:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: api.apexshare.be
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      RegionalCertificateArn:
+        Fn::ImportValue: ApexShare-DNS-prod:ExportsOutputRefWildcardCertificate25A2E830CD34CBD7
+      SecurityPolicy: TLS_1_2
+      Tags:
+        - Key: Backup
+          Value: Required
+        - Key: CostCenter
+          Value: ApexShare
+        - Key: Environment
+          Value: prod
+        - Key: ManagedBy
+          Value: CDK
+        - Key: Monitoring
+          Value: Critical
+        - Key: Owner
+          Value: Platform Team
+        - Key: Project
+          Value: ApexShare
+        - Key: Repository
+          Value: https://github.com/apexshare/infrastructure
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApiCustomDomain/Resource
+  ApiCustomDomainMapApexShareAPIprodApexShareApi62DD788D368D49B3:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      BasePath: ""
+      DomainName:
+        Ref: ApiCustomDomain9620A9CE
+      RestApiId:
+        Ref: ApexShareApi28F89377
+      Stage:
+        Ref: ApexShareApiDeploymentStagev184738141
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApiCustomDomain/Map:--=>ApexShareAPIprodApexShareApi62DD788D/Resource
+  ApiAliasRecordBCE933A3:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      AliasTarget:
+        DNSName:
+          Fn::GetAtt:
+            - ApiCustomDomain9620A9CE
+            - RegionalDomainName
+        HostedZoneId:
+          Fn::GetAtt:
+            - ApiCustomDomain9620A9CE
+            - RegionalHostedZoneId
+      Comment: API Gateway custom domain alias record
+      HostedZoneId:
+        Fn::ImportValue: ApexShare-DNS-prod:ExportsOutputRefHostedZoneDB99F8662BBAE844
+      Name: api.apexshare.be.
+      Type: A
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/ApiAliasRecord/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/21S0W7CMAz8lr2HbAOhPRfYpkljY0XaKzKpKaFtXBoHhKr++5IUBpr25PNdcr66Gcrh41g+3MHRDlRWDEq9lu2SQRXCU6vW7q1svxw6FNONiaATJeWefaf8tSFXB+GCvQbVOgPZvjijWJMJ6i9+PqDhN3OgAqdkNjoP6r/kAptKW+svdUJDJduUyhgh1gWVWp3iuYg6YUcrsBbZyiQU38uJUwXyBCwKqHUOjEc4eSO0nNQ6el1hohQ5w2KGdUmnyicK7E3nd5LHAD3wV8k1CqP9HHlLWRDP6KKeh/Q4xb3zA7+h1BkwNb34h5tThmV0imBGFWjzAVW0uunC3AXwdg51rU1c2R+qE/6HMI5Hsk1SVNRk/cCAlshdd00ZVxa+6+z06bh23AnjM8idvT8MR/LJP5Kd1XrQ+DXpCmXa1x+zA6u8QQIAAA==
+    Metadata:
+      aws:cdk:path: ApexShare-API-prod/CDKMetadata/Default
+Outputs:
+  ApexShareApiEndpointC7E3FB93:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: ApexShareApi28F89377
+          - .execute-api.eu-west-1.
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: ApexShareApiDeploymentStagev184738141
+          - /
+  ApiUrl:
+    Description: API Gateway URL
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: ApexShareApi28F89377
+          - .execute-api.eu-west-1.
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: ApexShareApiDeploymentStagev184738141
+          - /
+    Export:
+      Name: ApexShare-API-prod-ApiUrl
+  ApiCustomDomainUrl:
+    Description: API Gateway Custom Domain URL
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: ApiCustomDomain9620A9CE
+    Export:
+      Name: ApexShare-API-prod-ApiCustomDomainUrl
+  ApiId:
+    Description: API Gateway ID
+    Value:
+      Ref: ApexShareApi28F89377
+    Export:
+      Name: ApexShare-API-prod-ApiId
+  ApiCustomDomainName:
+    Description: API Gateway Custom Domain Name
+    Value:
+      Ref: ApiCustomDomain9620A9CE
+    Export:
+      Name: ApexShare-API-prod-ApiCustomDomainName
+  UploadHandlerArn:
+    Description: Upload Handler Lambda ARN
+    Value:
+      Fn::GetAtt:
+        - UploadHandler4CB020C5
+        - Arn
+    Export:
+      Name: ApexShare-API-prod-UploadHandlerArn
+  DownloadHandlerArn:
+    Description: Download Handler Lambda ARN
+    Value:
+      Fn::GetAtt:
+        - DownloadHandler09CC40DB
+        - Arn
+    Export:
+      Name: ApexShare-API-prod-DownloadHandlerArn
+  EmailSenderArn:
+    Description: Email Sender Lambda ARN
+    Value:
+      Fn::GetAtt:
+        - EmailSender31E0F5CB
+        - Arn
+    Export:
+      Name: ApexShare-API-prod-EmailSenderArn
+  AuthHandlerArn:
+    Description: Authentication Handler Lambda ARN
+    Value:
+      Fn::GetAtt:
+        - AuthHandler9DC767B7
+        - Arn
+    Export:
+      Name: ApexShare-API-prod-AuthHandlerArn
+  ExportsOutputRefApexShareApi28F8937796A200EF:
+    Value:
+      Ref: ApexShareApi28F89377
+    Export:
+      Name: ApexShare-API-prod:ExportsOutputRefApexShareApi28F8937796A200EF
+  ExportsOutputRefApexShareApiDeploymentStagev184738141287A1D01:
+    Value:
+      Ref: ApexShareApiDeploymentStagev184738141
+    Export:
+      Name: ApexShare-API-prod:ExportsOutputRefApexShareApiDeploymentStagev184738141287A1D01
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]
+

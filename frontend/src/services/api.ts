@@ -62,6 +62,11 @@ const createApiClient = (): AxiosInstance => {
         config.headers['X-Auth-Token'] = token  // No 'Bearer ' prefix needed
       }
 
+      // Add public access header for unauthenticated requests
+      if (!token && (config.url?.includes('/sessions') || config.url?.includes('/upload'))) {
+        config.headers['X-Public-Access'] = 'true'
+      }
+
       // Log request in development
       if (appConfig.enableDetailedLogging) {
         console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
@@ -246,11 +251,10 @@ export const apiService = {
 
     getUploadUrl: async (sessionId: string, fileName: string, fileSize: number, mimeType: string): Promise<ApiResponse<PresignedUploadUrl>> => {
       const response = await apiClient.post(`/sessions/${sessionId}/upload`, {
-        // API Gateway model expects these fields for validation
-        studentEmail: 'session@placeholder.com', // Required by API Gateway model
+        // API Gateway model expects exactly these 3 fields
         fileName,
         fileSize,
-        contentType: mimeType, // API Gateway expects 'contentType' field name (not mimeType)
+        contentType: mimeType,
       })
       return response.data
     },

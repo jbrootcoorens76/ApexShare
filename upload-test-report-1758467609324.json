@@ -1,0 +1,414 @@
+{
+  "timestamp": "2025-09-21T15:13:11.734Z",
+  "testSuite": "Upload Workflow E2E Test",
+  "environment": "production",
+  "frontend": "https://apexshare.be",
+  "api": "https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1",
+  "tests": [
+    {
+      "name": "API Health Check",
+      "status": "passed",
+      "startTime": 1758467594481,
+      "errors": [],
+      "details": {
+        "apiHealth": {
+          "status": 200,
+          "data": {
+            "status": "healthy",
+            "version": "1.0.0",
+            "timestamp": "2025-09-21T15:13:14.703Z",
+            "environment": "prod"
+          },
+          "headers": {
+            "date": "Sun, 21 Sep 2025 15:13:14 GMT",
+            "content-type": "application/json",
+            "content-length": "98",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "63a55660-8bed-4c46-bb01-b011c5ba3118",
+            "access-control-allow-origin": "*",
+            "x-amz-apigw-id": "RQhhuENLDoEESyQ=",
+            "x-amzn-trace-id": "Root=1-68d0160a-3b2f1b8749d8019628fe9548;Parent=521cad25f12fc125;Sampled=0;Lineage=1:1409f341:0"
+          }
+        }
+      },
+      "endTime": 1758467594685,
+      "duration": 204
+    },
+    {
+      "name": "Frontend Accessibility",
+      "status": "passed",
+      "startTime": 1758467594685,
+      "errors": [],
+      "details": {
+        "frontendAccess": {
+          "status": 200,
+          "url": "https://apexshare.be/",
+          "headers": {
+            "age": "554",
+            "alt-svc": "h3=\":443\"; ma=86400",
+            "content-encoding": "br",
+            "content-type": "text/html",
+            "date": "Sun, 21 Sep 2025 15:04:02 GMT",
+            "etag": "W/\"fb354e2ec03408f00a7f7073975ad29f\"",
+            "last-modified": "Sun, 21 Sep 2025 15:01:09 GMT",
+            "permissions-policy": "geolocation=(), microphone=(), camera=()",
+            "referrer-policy": "strict-origin-when-cross-origin",
+            "server": "AmazonS3",
+            "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+            "vary": "accept-encoding",
+            "via": "1.1 56692dbe29c7865d0d6062c6ee524ab8.cloudfront.net (CloudFront)",
+            "x-amz-cf-id": "rOuZ_n0w73mwQWE-Git60W-EzskBtHcMnFfLE6Uv4FwiSyZlsq5Maw==",
+            "x-amz-cf-pop": "BRU50-P1",
+            "x-amz-server-side-encryption": "AES256",
+            "x-amz-version-id": "UCWH8JZwfCBiBPnSToN8JKC92QbGtLTR",
+            "x-cache": "Hit from cloudfront",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "DENY",
+            "x-xss-protection": "1; mode=block"
+          }
+        },
+        "pageTitle": "ApexShare - Motorcycle Training Video Sharing"
+      },
+      "endTime": 1758467597765,
+      "duration": 3080
+    },
+    {
+      "name": "Upload Page Load",
+      "status": "failed",
+      "startTime": 1758467597765,
+      "errors": [
+        {
+          "message": "Missing form elements: sessionDate, fileUpload",
+          "stack": "Error: Missing form elements: sessionDate, fileUpload\n    at UploadWorkflowTester.testUploadPageLoad (/Users/jimmybrootcoorens/Library/Mobile Documents/com~apple~CloudDocs/JBIT /apps/ApexShare/comprehensive-upload-test.js:213:15)\n    at async UploadWorkflowTester.runTest (/Users/jimmybrootcoorens/Library/Mobile Documents/com~apple~CloudDocs/JBIT /apps/ApexShare/comprehensive-upload-test.js:69:7)\n    at async UploadWorkflowTester.runAllTests (/Users/jimmybrootcoorens/Library/Mobile Documents/com~apple~CloudDocs/JBIT /apps/ApexShare/comprehensive-upload-test.js:467:7)"
+        }
+      ],
+      "details": {
+        "uploadPage": {
+          "formElements": {
+            "studentEmail": true,
+            "sessionDate": false,
+            "fileUpload": false,
+            "uploadButton": true
+          },
+          "requests": 8,
+          "responses": 8,
+          "networkLogs": {
+            "requests": [
+              {
+                "url": "https://apexshare.be/assets/vendor-BD2DzXP7.js",
+                "method": "GET",
+                "headers": {
+                  "origin": "https://apexshare.be",
+                  "sec-ch-ua-platform": "\"macOS\"",
+                  "referer": "https://apexshare.be/upload",
+                  "accept-language": "en-US,en;q=0.9",
+                  "sec-ch-ua": "\"Not=A?Brand\";v=\"24\", \"Chromium\";v=\"140\"",
+                  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+                  "sec-ch-ua-mobile": "?0"
+                }
+              },
+              {
+                "url": "https://apexshare.be/assets/router-DFgdcZ_Z.js",
+                "method": "GET",
+                "headers": {
+                  "origin": "https://apexshare.be",
+                  "sec-ch-ua-platform": "\"macOS\"",
+                  "referer": "https://apexshare.be/upload",
+                  "accept-language": "en-US,en;q=0.9",
+                  "sec-ch-ua": "\"Not=A?Brand\";v=\"24\", \"Chromium\";v=\"140\"",
+                  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+                  "sec-ch-ua-mobile": "?0"
+                }
+              },
+              {
+                "url": "https://apexshare.be/assets/aws-6vuVcGup.js",
+                "method": "GET",
+                "headers": {
+                  "origin": "https://apexshare.be",
+                  "sec-ch-ua-platform": "\"macOS\"",
+                  "referer": "https://apexshare.be/upload",
+                  "accept-language": "en-US,en;q=0.9",
+                  "sec-ch-ua": "\"Not=A?Brand\";v=\"24\", \"Chromium\";v=\"140\"",
+                  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+                  "sec-ch-ua-mobile": "?0"
+                }
+              },
+              {
+                "url": "https://apexshare.be/assets/index-XYwC6y8m.css",
+                "method": "GET",
+                "headers": {
+                  "origin": "https://apexshare.be",
+                  "sec-ch-ua-platform": "\"macOS\"",
+                  "referer": "https://apexshare.be/upload",
+                  "accept-language": "en-US,en;q=0.9",
+                  "sec-ch-ua": "\"Not=A?Brand\";v=\"24\", \"Chromium\";v=\"140\"",
+                  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+                  "sec-ch-ua-mobile": "?0"
+                }
+              },
+              {
+                "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2",
+                "method": "GET",
+                "headers": {
+                  "origin": "https://apexshare.be",
+                  "sec-ch-ua-platform": "\"macOS\"",
+                  "referer": "https://fonts.googleapis.com/",
+                  "accept-language": "en-US,en;q=0.9",
+                  "sec-ch-ua": "\"Not=A?Brand\";v=\"24\", \"Chromium\";v=\"140\"",
+                  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+                  "sec-ch-ua-mobile": "?0"
+                }
+              }
+            ],
+            "responses": [
+              {
+                "url": "https://apexshare.be/assets/aws-6vuVcGup.js",
+                "status": 304,
+                "headers": {
+                  "age": "557",
+                  "alt-svc": "h3=\":443\"; ma=86400",
+                  "date": "Sun, 21 Sep 2025 15:13:18 GMT",
+                  "etag": "\"34696c289658b36078f6d990b528f51c\"",
+                  "permissions-policy": "geolocation=(), microphone=(), camera=()",
+                  "referrer-policy": "strict-origin-when-cross-origin",
+                  "server": "AmazonS3",
+                  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                  "via": "1.1 7b3039c48360643d61f0384c64a0d9d8.cloudfront.net (CloudFront)",
+                  "x-amz-cf-id": "G_a1aTnJBCIDtE6SKWnNa8XwA9_0jMuhSgN5FtW0MxwvFgI4DmaiCw==",
+                  "x-amz-cf-pop": "BRU50-P1",
+                  "x-amz-server-side-encryption": "AES256",
+                  "x-amz-version-id": "DwICY4NLJv4_Dbtsq4at1JmYYbfHl0HJ",
+                  "x-cache": "Hit from cloudfront",
+                  "x-content-type-options": "nosniff",
+                  "x-frame-options": "DENY",
+                  "x-xss-protection": "1; mode=block"
+                }
+              },
+              {
+                "url": "https://apexshare.be/assets/index-XYwC6y8m.css",
+                "status": 304,
+                "headers": {
+                  "age": "557",
+                  "alt-svc": "h3=\":443\"; ma=86400",
+                  "date": "Sun, 21 Sep 2025 15:13:18 GMT",
+                  "etag": "W/\"bb69e43aca3015e5be6f723fbb6fcc5f\"",
+                  "permissions-policy": "geolocation=(), microphone=(), camera=()",
+                  "referrer-policy": "strict-origin-when-cross-origin",
+                  "server": "AmazonS3",
+                  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                  "vary": "accept-encoding",
+                  "via": "1.1 7b3039c48360643d61f0384c64a0d9d8.cloudfront.net (CloudFront)",
+                  "x-amz-cf-id": "1eckFW7sZtuZetLUc0PFKJKaJdaLqxl1VIZOXEJi-8wx-cOWaHSF0A==",
+                  "x-amz-cf-pop": "BRU50-P1",
+                  "x-amz-server-side-encryption": "AES256",
+                  "x-amz-version-id": "8NNbp00I_NeJoS33t9Vevwn4MpV4pMt6",
+                  "x-cache": "Hit from cloudfront",
+                  "x-content-type-options": "nosniff",
+                  "x-frame-options": "DENY",
+                  "x-xss-protection": "1; mode=block"
+                }
+              },
+              {
+                "url": "https://apexshare.be/assets/vendor-BD2DzXP7.js",
+                "status": 304,
+                "headers": {
+                  "age": "557",
+                  "alt-svc": "h3=\":443\"; ma=86400",
+                  "date": "Sun, 21 Sep 2025 15:13:18 GMT",
+                  "etag": "W/\"3964fc2275bb1869945a4c3b0f9f4550\"",
+                  "permissions-policy": "geolocation=(), microphone=(), camera=()",
+                  "referrer-policy": "strict-origin-when-cross-origin",
+                  "server": "AmazonS3",
+                  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                  "vary": "accept-encoding",
+                  "via": "1.1 7b3039c48360643d61f0384c64a0d9d8.cloudfront.net (CloudFront)",
+                  "x-amz-cf-id": "WnVN1guEMMVl7Go7uyi8rqlS190jwyNTpeO0Bl0a3HbPpnYlaelU9w==",
+                  "x-amz-cf-pop": "BRU50-P1",
+                  "x-amz-server-side-encryption": "AES256",
+                  "x-amz-version-id": "0gQaJw_0oehOs20vuF3Xe1L8VIjHqxtL",
+                  "x-cache": "Hit from cloudfront",
+                  "x-content-type-options": "nosniff",
+                  "x-frame-options": "DENY",
+                  "x-xss-protection": "1; mode=block"
+                }
+              },
+              {
+                "url": "https://apexshare.be/assets/router-DFgdcZ_Z.js",
+                "status": 304,
+                "headers": {
+                  "age": "557",
+                  "alt-svc": "h3=\":443\"; ma=86400",
+                  "date": "Sun, 21 Sep 2025 15:13:18 GMT",
+                  "etag": "W/\"a716c3f44cd821b1d1d70d446b576af2\"",
+                  "permissions-policy": "geolocation=(), microphone=(), camera=()",
+                  "referrer-policy": "strict-origin-when-cross-origin",
+                  "server": "AmazonS3",
+                  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                  "vary": "accept-encoding",
+                  "via": "1.1 7b3039c48360643d61f0384c64a0d9d8.cloudfront.net (CloudFront)",
+                  "x-amz-cf-id": "_MTZ4AP2xLUSWYpu2Q4iY1ciFuWRKd9PMSeaaPP7aeK_QjEd6VkLPw==",
+                  "x-amz-cf-pop": "BRU50-P1",
+                  "x-amz-server-side-encryption": "AES256",
+                  "x-amz-version-id": "T6xhxvVRahUZjBxHMm4fNqng0jIs20N0",
+                  "x-cache": "Hit from cloudfront",
+                  "x-content-type-options": "nosniff",
+                  "x-frame-options": "DENY",
+                  "x-xss-protection": "1; mode=block"
+                }
+              },
+              {
+                "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2",
+                "status": 200,
+                "headers": {
+                  "age": "40564",
+                  "report-to": "{\"group\":\"apps-themes\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/apps-themes\"}]}",
+                  "x-content-type-options": "nosniff",
+                  "expires": "Mon, 21 Sep 2026 03:57:11 GMT",
+                  "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+                  "date": "Sun, 21 Sep 2025 03:57:11 GMT",
+                  "last-modified": "Tue, 09 Sep 2025 18:40:32 GMT",
+                  "content-type": "font/woff2",
+                  "cache-control": "public, max-age=31536000",
+                  "timing-allow-origin": "*",
+                  "cross-origin-opener-policy": "same-origin; report-to=\"apps-themes\"",
+                  "cross-origin-resource-policy": "cross-origin",
+                  "content-security-policy-report-only": "require-trusted-types-for 'script'; report-uri https://csp.withgoogle.com/csp/apps-themes",
+                  "accept-ranges": "bytes",
+                  "access-control-allow-origin": "*",
+                  "content-length": "48432",
+                  "x-xss-protection": "0",
+                  "server": "sffe"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "endTime": 1758467599606,
+      "duration": 1841
+    },
+    {
+      "name": "Authentication Methods",
+      "status": "passed",
+      "startTime": 1758467599606,
+      "errors": [],
+      "details": {
+        "xAuthToken": {
+          "status": 403,
+          "data": {
+            "message": "Missing Authentication Token"
+          },
+          "headers": {
+            "date": "Sun, 21 Sep 2025 15:13:19 GMT",
+            "content-type": "application/json",
+            "content-length": "42",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "06de2e1e-24a9-4039-9559-3408e44662b3",
+            "x-amzn-errortype": "MissingAuthenticationTokenException",
+            "x-amz-apigw-id": "RQhigGugDoEEtvg="
+          }
+        },
+        "authorization": {
+          "status": 403,
+          "data": {
+            "message": "Invalid key=value pair (missing equal-sign) in Authorization header (hashed with SHA-256 and encoded with Base64): '0IBvjuYq8zuTLEqCRxNFkfiM6xzqEWaW0Ydk1+bYYRo='."
+          },
+          "headers": {
+            "date": "Sun, 21 Sep 2025 15:13:19 GMT",
+            "content-type": "application/json",
+            "content-length": "176",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "4f84fdce-fcd7-4af4-8772-9eb3d0156b9a",
+            "x-amzn-errortype": "IncompleteSignatureException",
+            "x-amz-apigw-id": "RQhihFzXDoEEZdA="
+          }
+        },
+        "noAuth": {
+          "status": 403,
+          "data": {
+            "message": "Missing Authentication Token"
+          },
+          "headers": {
+            "date": "Sun, 21 Sep 2025 15:13:19 GMT",
+            "content-type": "application/json",
+            "content-length": "42",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "01a5fd86-fcbd-4022-83a2-9df7e75b768f",
+            "x-amzn-errortype": "MissingAuthenticationTokenException",
+            "x-amz-apigw-id": "RQhihHVKDoEEsLA="
+          }
+        }
+      },
+      "endTime": 1758467599728,
+      "duration": 122
+    },
+    {
+      "name": "CORS Configuration",
+      "status": "passed",
+      "startTime": 1758467599728,
+      "errors": [],
+      "details": {
+        "cors": {
+          "status": 204,
+          "headers": {
+            "date": "Sun, 21 Sep 2025 15:13:19 GMT",
+            "content-type": "application/json",
+            "content-length": "0",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "9bd676ca-d273-4ca9-a645-c04f2113a14a",
+            "access-control-allow-origin": "https://apexshare.be",
+            "access-control-allow-headers": "Content-Type,Authorization,X-Requested-With,Accept,Origin",
+            "x-amz-apigw-id": "RQhihHl9DoEEttQ=",
+            "vary": "Origin",
+            "access-control-allow-methods": "GET,POST,OPTIONS",
+            "access-control-expose-headers": "ETag,x-amz-version-id",
+            "access-control-max-age": "3000"
+          },
+          "allowedOrigins": "https://apexshare.be",
+          "allowedMethods": "GET,POST,OPTIONS",
+          "allowedHeaders": "Content-Type,Authorization,X-Requested-With,Accept,Origin"
+        }
+      },
+      "endTime": 1758467599779,
+      "duration": 51
+    },
+    {
+      "name": "Browser Upload Flow",
+      "status": "failed",
+      "startTime": 1758467599779,
+      "errors": [
+        {
+          "message": "page.waitForTimeout is not a function",
+          "stack": "TypeError: page.waitForTimeout is not a function\n    at UploadWorkflowTester.testBrowserUploadFlow (/Users/jimmybrootcoorens/Library/Mobile Documents/com~apple~CloudDocs/JBIT /apps/ApexShare/comprehensive-upload-test.js:363:20)\n    at async UploadWorkflowTester.runTest (/Users/jimmybrootcoorens/Library/Mobile Documents/com~apple~CloudDocs/JBIT /apps/ApexShare/comprehensive-upload-test.js:69:7)\n    at async UploadWorkflowTester.runAllTests (/Users/jimmybrootcoorens/Library/Mobile Documents/com~apple~CloudDocs/JBIT /apps/ApexShare/comprehensive-upload-test.js:476:7)"
+        }
+      ],
+      "details": {},
+      "endTime": 1758467609129,
+      "duration": 9350
+    },
+    {
+      "name": "Incognito Mode",
+      "status": "failed",
+      "startTime": 1758467609129,
+      "errors": [
+        {
+          "message": "this.browser.createIncognitoBrowserContext is not a function",
+          "stack": "TypeError: this.browser.createIncognitoBrowserContext is not a function\n    at UploadWorkflowTester.testIncognitoMode (/Users/jimmybrootcoorens/Library/Mobile Documents/com~apple~CloudDocs/JBIT /apps/ApexShare/comprehensive-upload-test.js:388:49)\n    at UploadWorkflowTester.runTest (/Users/jimmybrootcoorens/Library/Mobile Documents/com~apple~CloudDocs/JBIT /apps/ApexShare/comprehensive-upload-test.js:69:13)\n    at UploadWorkflowTester.runAllTests (/Users/jimmybrootcoorens/Library/Mobile Documents/com~apple~CloudDocs/JBIT /apps/ApexShare/comprehensive-upload-test.js:479:18)\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at listOnTimeout (node:internal/timers:575:9)\n    at process.processTimers (node:internal/timers:549:7)"
+        }
+      ],
+      "details": {},
+      "endTime": 1758467609129,
+      "duration": 0
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "passed": 4,
+    "failed": 3,
+    "errors": [
+      "Upload Page Load: Missing form elements: sessionDate, fileUpload",
+      "Browser Upload Flow: page.waitForTimeout is not a function",
+      "Incognito Mode: this.browser.createIncognitoBrowserContext is not a function"
+    ]
+  }
+}

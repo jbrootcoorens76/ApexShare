@@ -235,7 +235,7 @@ export const LoginPage: React.FC = () => {
           <button
             type="button"
             className="text-sm text-primary-600 hover:text-primary-500"
-            onClick={() => toast.info('Password reset functionality coming soon')}
+            onClick={() => toast('Password reset functionality coming soon')}
           >
             Forgot password?
           </button>

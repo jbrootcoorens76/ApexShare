@@ -155,7 +155,7 @@ export const DownloadPage: React.FC = () => {
       newMap.delete(fileId)
       return { ...prev, downloads: newMap }
     })
-    toast.info('Download cancelled')
+    toast('Download cancelled')
   }
 
   if (sessionLoading || filesLoading) {
@@ -346,7 +346,7 @@ const FileCard: React.FC<FileCardProps> = ({ file, isDownloading, onDownload }) 
           {isVideo && (
             <button
               className="btn btn-secondary btn-sm"
-              onClick={() => toast.info('Video preview coming soon')}
+              onClick={() => toast('Video preview coming soon')}
             >
               <Eye className="h-4 w-4 mr-1" />
               Preview

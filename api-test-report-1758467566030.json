@@ -1,0 +1,220 @@
+{
+  "timestamp": "2025-09-21T15:12:44.842Z",
+  "environment": "production",
+  "tests": [
+    {
+      "name": "Network Connectivity",
+      "status": "passed",
+      "startTime": 1758467564844,
+      "details": {
+        "connectivity": {
+          "API Base": {
+            "status": 403,
+            "responseTime": 188,
+            "accessible": true
+          },
+          "API Health": {
+            "status": 403,
+            "responseTime": 38,
+            "accessible": true
+          },
+          "Frontend": {
+            "status": 200,
+            "responseTime": 138,
+            "accessible": true
+          }
+        }
+      },
+      "errors": [],
+      "endTime": 1758467565209,
+      "duration": 365
+    },
+    {
+      "name": "Health Endpoint",
+      "status": "passed",
+      "startTime": 1758467565209,
+      "details": {
+        "status": 200,
+        "data": {
+          "status": "healthy",
+          "version": "1.0.0",
+          "timestamp": "2025-09-21T15:12:45.668Z",
+          "environment": "prod"
+        },
+        "headers": {
+          "date": "Sun, 21 Sep 2025 15:12:45 GMT",
+          "content-type": "application/json",
+          "content-length": "98",
+          "connection": "keep-alive",
+          "x-amzn-requestid": "9d090908-7e50-48e3-8c80-3f7c276effa0",
+          "access-control-allow-origin": "*",
+          "x-amz-apigw-id": "RQhdIHexjoEEFFA=",
+          "x-amzn-trace-id": "Root=1-68d015ed-29083d3145b5f1eb35364571;Parent=0a523e5b533c7cae;Sampled=0;Lineage=1:1409f341:0"
+        }
+      },
+      "errors": [],
+      "endTime": 1758467565680,
+      "duration": 471
+    },
+    {
+      "name": "CORS Configuration",
+      "status": "passed",
+      "startTime": 1758467565680,
+      "details": {
+        "optionsRequest": {
+          "status": 204,
+          "headers": {
+            "date": "Sun, 21 Sep 2025 15:12:45 GMT",
+            "content-type": "application/json",
+            "content-length": "0",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "de6fbbc8-e66d-4e1d-823b-44455695830e",
+            "access-control-allow-origin": "https://apexshare.be",
+            "access-control-allow-headers": "Content-Type,Authorization,X-Requested-With,Accept,Origin",
+            "x-amz-apigw-id": "RQhdNG0rDoEEivg=",
+            "vary": "Origin",
+            "access-control-allow-methods": "GET,POST,OPTIONS",
+            "access-control-expose-headers": "ETag,x-amz-version-id",
+            "access-control-max-age": "3000"
+          },
+          "data": ""
+        },
+        "postRequest": {
+          "status": 403,
+          "headers": {
+            "date": "Sun, 21 Sep 2025 15:12:45 GMT",
+            "content-type": "application/json",
+            "content-length": "42",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "3df431ea-4f16-429e-a94f-0b60918a9faf",
+            "x-amzn-errortype": "MissingAuthenticationTokenException",
+            "x-amz-apigw-id": "RQhdNFoADoEEuZw="
+          },
+          "corsHeaders": {}
+        }
+      },
+      "errors": [],
+      "endTime": 1758467565776,
+      "duration": 96
+    },
+    {
+      "name": "Upload - X-Auth-Token",
+      "status": "passed",
+      "startTime": 1758467565776,
+      "details": {
+        "requestData": {
+          "studentEmail": "qa-test@apexshare.be",
+          "studentName": "API Test Student",
+          "trainerName": "QA Test Trainer",
+          "sessionDate": "2025-09-21",
+          "notes": "API test upload with X-Auth-Token"
+        },
+        "status": 403,
+        "data": {
+          "message": "Missing Authentication Token"
+        },
+        "headers": {
+          "date": "Sun, 21 Sep 2025 15:12:45 GMT",
+          "content-type": "application/json",
+          "content-length": "42",
+          "connection": "keep-alive",
+          "x-amzn-requestid": "5f252ff4-6173-4f68-86ce-85cafdbf6240",
+          "x-amzn-errortype": "MissingAuthenticationTokenException",
+          "x-amz-apigw-id": "RQhdOG_5DoEEpqA="
+        }
+      },
+      "errors": [],
+      "endTime": 1758467565819,
+      "duration": 43
+    },
+    {
+      "name": "Upload - Authorization Bearer",
+      "status": "passed",
+      "startTime": 1758467565820,
+      "details": {
+        "requestData": {
+          "studentEmail": "qa-test@apexshare.be",
+          "studentName": "API Test Student",
+          "trainerName": "QA Test Trainer",
+          "sessionDate": "2025-09-21",
+          "notes": "API test upload with Authorization Bearer"
+        },
+        "status": 403,
+        "data": {
+          "message": "Invalid key=value pair (missing equal-sign) in Authorization header (hashed with SHA-256 and encoded with Base64): '2lCXEk6cF8PxVnLk9QXDTCrUVZzpsBw1l1ygn8tG5lM='."
+        },
+        "headers": {
+          "date": "Sun, 21 Sep 2025 15:12:45 GMT",
+          "content-type": "application/json",
+          "content-length": "176",
+          "connection": "keep-alive",
+          "x-amzn-requestid": "44885e10-fe8d-4880-b1d0-9d36580d856e",
+          "x-amzn-errortype": "IncompleteSignatureException",
+          "x-amz-apigw-id": "RQhdOG7ADoEEkUQ="
+        }
+      },
+      "errors": [],
+      "endTime": 1758467565859,
+      "duration": 39
+    },
+    {
+      "name": "Upload - No Authentication",
+      "status": "passed",
+      "startTime": 1758467565859,
+      "details": {
+        "requestData": {
+          "studentEmail": "qa-test@apexshare.be",
+          "studentName": "API Test Student",
+          "trainerName": "QA Test Trainer",
+          "sessionDate": "2025-09-21",
+          "notes": "API test upload without authentication"
+        },
+        "status": 403,
+        "data": {
+          "message": "Missing Authentication Token"
+        },
+        "headers": {
+          "date": "Sun, 21 Sep 2025 15:12:45 GMT",
+          "content-type": "application/json",
+          "content-length": "42",
+          "connection": "keep-alive",
+          "x-amzn-requestid": "73c2ba62-834c-40b2-8202-44d23e56d5a4",
+          "x-amzn-errortype": "MissingAuthenticationTokenException",
+          "x-amz-apigw-id": "RQhdPEHCDoEEliQ="
+        }
+      },
+      "errors": [],
+      "endTime": 1758467565902,
+      "duration": 43
+    },
+    {
+      "name": "File Upload Endpoint",
+      "status": "passed",
+      "startTime": 1758467565902,
+      "details": {
+        "status": 403,
+        "data": {
+          "message": "Missing Authentication Token"
+        },
+        "headers": {
+          "date": "Sun, 21 Sep 2025 15:12:46 GMT",
+          "content-type": "application/json",
+          "content-length": "42",
+          "connection": "keep-alive",
+          "x-amzn-requestid": "dbf45ce0-1bb3-4215-b0a9-be1647e5420b",
+          "x-amzn-errortype": "MissingAuthenticationTokenException",
+          "x-amz-apigw-id": "RQhdQGcDDoEEqRA="
+        }
+      },
+      "errors": [],
+      "endTime": 1758467566029,
+      "duration": 127
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "errors": []
+  }
+}

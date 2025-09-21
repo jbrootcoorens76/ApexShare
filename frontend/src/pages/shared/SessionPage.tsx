@@ -391,7 +391,7 @@ export const SessionPage: React.FC = () => {
                           {file.mimeType.startsWith('video/') && (
                             <button
                               className="btn btn-secondary btn-sm"
-                              onClick={() => toast.info('Video preview coming soon')}
+                              onClick={() => toast('Video preview coming soon')}
                             >
                               <Eye className="h-4 w-4" />
                             </button>

@@ -5,7 +5,7 @@
  * Provides a responsive layout that adapts to different screen sizes.
  */
 
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { getDeviceInfo } from '@/utils/device'
@@ -20,6 +20,7 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { TrainerDashboard } from '@/pages/trainer/TrainerDashboard'
 import { StudentDashboard } from '@/pages/student/StudentDashboard'
 import { UploadPage } from '@/pages/trainer/UploadPage'
+import { DirectUploadPage } from '@/pages/DirectUploadPage'
 import { SessionPage } from '@/pages/shared/SessionPage'
 import { DownloadPage } from '@/pages/student/DownloadPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -85,6 +86,9 @@ function App() {
               )
             }
           />
+
+          {/* Public upload route */}
+          <Route path="/upload" element={<DirectUploadPage />} />
 
           {/* Session access route (public but may require access code) */}
           <Route path="/session/:sessionId" element={<SessionPage />} />

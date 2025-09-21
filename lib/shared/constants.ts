@@ -44,6 +44,7 @@ export const API_CONFIG = {
       'X-Requested-With',
       'Accept',
       'Origin',
+      'X-Auth-Token',
     ],
   },
 } as const;

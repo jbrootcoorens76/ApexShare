@@ -84,20 +84,12 @@ const SQL_INJECTION_PATTERNS = [
     /javascript:/i,
 ];
 /**
- * Extract token from Authorization header or X-Auth-Token header
+ * Extract token from Authorization header
  */
 function extractToken(headers) {
     if (!headers) {
         return null;
     }
-
-    // First check X-Auth-Token header (fallback for custom domain issues)
-    const xAuthToken = headers['X-Auth-Token'] || headers['x-auth-token'];
-    if (xAuthToken) {
-        return xAuthToken;
-    }
-
-    // Then check standard Authorization header
     const authHeader = headers.Authorization || headers.authorization;
     if (!authHeader) {
         return null;
@@ -146,9 +138,13 @@ function validateAuthorization(event) {
     if (!token) {
         return { isValid: false, error: 'No authorization token provided' };
     }
-    // For demo/development: simple mock validation (same as sessions handler)
-    // In production, verify JWT properly
-    return { isValid: true, userId: 'trainer@apexshare.be', role: 'trainer' };
+    try {
+        const payload = verifyToken(token);
+        return { isValid: true, userId: payload.userId, role: payload.role };
+    }
+    catch (error) {
+        return { isValid: false, error: error.message };
+    }
 }
 /**
  * Main Lambda handler
