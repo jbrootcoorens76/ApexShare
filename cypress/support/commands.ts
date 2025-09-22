@@ -16,6 +16,14 @@ declare global {
       testMobileViewport(): Chainable<void>;
       testTabletViewport(): Chainable<void>;
       testDesktopViewport(): Chainable<void>;
+      // Chrome-specific commands
+      validateChromeSupport(): Chainable<void>;
+      testAPIGatewayConnectivity(): Chainable<void>;
+      monitorNetworkRequests(): Chainable<void>;
+      simulateRealUpload(file?: File): Chainable<void>;
+      captureNetworkErrors(): Chainable<void>;
+      validateSessionCreation(): Chainable<void>;
+      testAuthenticationHeaders(): Chainable<void>;
     }
   }
 }

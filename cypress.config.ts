@@ -15,6 +15,10 @@ export default defineConfig({
       runMode: 2,
       openMode: 0
     },
+    // Force Chrome browser for real-world testing
+    browser: 'chrome',
+    chromeWebSecurity: false, // Disable web security for cross-origin testing
+    experimentalSessionAndOrigin: true,
     env: {
       apiUrl: 'https://api.apexshare.be',
       testEmail: 'test@apexshare.be',

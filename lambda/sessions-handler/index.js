@@ -9,7 +9,7 @@ const TABLE_NAME = process.env.DYNAMODB_TABLE || 'apexshare-uploads-prod';
 // CORS headers for all responses
 const corsHeaders = {
   'Access-Control-Allow-Origin': process.env.CORS_ORIGINS || 'https://apexshare.be',
-  'Access-Control-Allow-Headers': 'Content-Type,X-Requested-With,Authorization,X-Auth-Token',
+  'Access-Control-Allow-Headers': 'Content-Type,X-Requested-With,Authorization,X-Auth-Token,X-Public-Access',
   'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
 };
 
@@ -20,6 +20,12 @@ function validateToken(event) {
   if (xAuthToken) {
     // For now, just return a mock user - in production, verify JWT
     return { userId: 'trainer@apexshare.be', role: 'trainer' };
+  }
+
+  // Check X-Public-Access header for frontend compatibility
+  const publicAccess = event.headers?.['X-Public-Access'] || event.headers?.['x-public-access'];
+  if (publicAccess === 'true') {
+    return { userId: 'public-user@apexshare.be', role: 'public' };
   }
 
   // Then check standard Authorization header

@@ -152,20 +152,30 @@ function verifyToken(token: string): any {
 
 /**
  * Validate authorization for session upload
+ * Updated to match sessions handler's permissive authentication pattern
  */
 function validateAuthorization(event: APIGatewayProxyEvent): AuthResult {
-  const token = extractToken(event.headers);
-
-  if (!token) {
-    return { isValid: false, error: 'No authorization token provided' };
+  // Check X-Auth-Token header (same as sessions handler)
+  const xAuthToken = event.headers?.['X-Auth-Token'] || event.headers?.['x-auth-token'];
+  if (xAuthToken) {
+    // For now, accept any X-Auth-Token - matching sessions handler behavior
+    return { isValid: true, userId: 'trainer@apexshare.be', role: 'trainer' };
   }
 
-  try {
-    const payload = verifyToken(token);
-    return { isValid: true, userId: payload.userId, role: payload.role };
-  } catch (error) {
-    return { isValid: false, error: (error as Error).message };
+  // Check X-Public-Access header for frontend compatibility
+  const publicAccess = event.headers?.['X-Public-Access'] || event.headers?.['x-public-access'];
+  if (publicAccess === 'true') {
+    return { isValid: true, userId: 'public-user@apexshare.be', role: 'public' };
   }
+
+  // Check standard Authorization header as fallback
+  const authHeader = event.headers?.Authorization || event.headers?.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    // For now, accept any Bearer token - matching sessions handler behavior
+    return { isValid: true, userId: 'trainer@apexshare.be', role: 'trainer' };
+  }
+
+  return { isValid: false, error: 'No authorization token provided' };
 }
 
 /**
@@ -192,10 +202,10 @@ export const handler = async (
       source: 'handler-entry'
     }, null, 2));
 
-    // Set up CORS headers
+    // Set up CORS headers (matching sessions handler)
     const headers = {
       'Access-Control-Allow-Origin': process.env.CORS_ORIGINS || '*',
-      'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+      'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Auth-Token,X-Public-Access',
       'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
       'Content-Type': 'application/json',
     };

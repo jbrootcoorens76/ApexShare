@@ -2,6 +2,7 @@
 // This file is processed and loaded automatically before your test files.
 
 import './commands';
+import './test-utils';
 import '@cypress/code-coverage/support';
 
 // Hide XHR requests by default
@@ -25,8 +26,28 @@ Cypress.Commands.add('skipOn', (nameOrFlag, cb) => {
   cb();
 });
 
+// Chrome-specific browser detection and configuration
+before(() => {
+  if (Cypress.browser.name !== 'chrome') {
+    throw new Error('These tests must run in Chrome browser for accurate validation');
+  }
+
+  // Set Chrome-specific user agent to match real users
+  cy.window().then((win) => {
+    Object.defineProperty(win.navigator, 'userAgent', {
+      value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      configurable: true
+    });
+  });
+});
+
 // Custom error handling
 Cypress.on('uncaught:exception', (err, runnable) => {
+  // Log Chrome-specific errors for debugging
+  if (Cypress.browser.name === 'chrome') {
+    cy.task('log', `Chrome Error: ${err.message} - ${err.stack}`);
+  }
+
   // Ignore specific errors that might occur in the application
   if (err.message.includes('ResizeObserver loop limit exceeded')) {
     return false;
@@ -34,6 +55,12 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 
   if (err.message.includes('Non-Error promise rejection captured')) {
     return false;
+  }
+
+  // Don't ignore fetch errors - these are what we're testing
+  if (err.message.includes('Failed to fetch')) {
+    cy.task('log', `CRITICAL: Failed to fetch error detected in Chrome - ${err.message}`);
+    return true; // Let this error fail the test
   }
 
   // Return false to prevent the test from failing

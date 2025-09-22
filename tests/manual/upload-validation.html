@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApexShare Upload Validation Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #374151;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px 10px 5px 0;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        .warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+        pre {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input[type="text"], input[type="email"], input[type="date"], input[type="file"], textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ApexShare Upload Validation Test</h1>
+        <p class="subtitle">Comprehensive validation of the upload workflow fix</p>
+
+        <!-- API Configuration -->
+        <div class="test-section">
+            <h2>API Configuration</h2>
+            <div class="form-group">
+                <label for="apiBaseUrl">API Base URL:</label>
+                <input type="text" id="apiBaseUrl" value="https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1">
+            </div>
+            <button onclick="testApiHealth()">Test API Health</button>
+            <div id="apiHealthResult"></div>
+        </div>
+
+        <!-- Authentication Testing -->
+        <div class="test-section">
+            <h2>Authentication Method Testing</h2>
+            <div class="grid">
+                <div>
+                    <h3>X-Auth-Token Method</h3>
+                    <button onclick="testXAuthTokenMethod()">Test X-Auth-Token</button>
+                    <div id="xAuthTokenResult"></div>
+                </div>
+                <div>
+                    <h3>X-Public-Access Method</h3>
+                    <button onclick="testXPublicAccessMethod()">Test X-Public-Access</button>
+                    <div id="xPublicAccessResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payload Format Testing -->
+        <div class="test-section">
+            <h2>Payload Format Validation</h2>
+            <button onclick="testCorrectPayloadFormat()">Test Correct Format (3 fields)</button>
+            <button onclick="testPayloadWithExtraFields()">Test With Extra Fields</button>
+            <div id="payloadFormatResult"></div>
+        </div>
+
+        <!-- Complete Upload Workflow -->
+        <div class="test-section">
+            <h2>Complete Upload Workflow Test</h2>
+            <div class="form-group">
+                <label for="studentEmail">Student Email:</label>
+                <input type="email" id="studentEmail" value="test.validation@example.com">
+            </div>
+            <div class="grid">
+                <div class="form-group">
+                    <label for="studentName">Student Name:</label>
+                    <input type="text" id="studentName" value="Test Student">
+                </div>
+                <div class="form-group">
+                    <label for="trainerName">Trainer Name:</label>
+                    <input type="text" id="trainerName" value="Test Trainer">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="sessionDate">Session Date:</label>
+                <input type="date" id="sessionDate" value="2025-01-15">
+            </div>
+            <div class="form-group">
+                <label for="sessionNotes">Session Notes:</label>
+                <textarea id="sessionNotes" placeholder="Test session validation notes">E2E validation test for upload workflow fix</textarea>
+            </div>
+            <div class="form-group">
+                <label for="testFile">Test File:</label>
+                <input type="file" id="testFile" accept="video/*">
+                <button onclick="createTestFile()">Create Test Video File</button>
+            </div>
+            <button onclick="testCompleteWorkflow()">Test Complete Workflow</button>
+            <div id="completeWorkflowResult"></div>
+        </div>
+
+        <!-- Error Validation -->
+        <div class="test-section">
+            <h2>400 Error Validation</h2>
+            <p>Testing that the previously occurring 400 errors have been resolved.</p>
+            <button onclick="testNo400Errors()">Validate No 400 Errors</button>
+            <div id="errorValidationResult"></div>
+        </div>
+
+        <!-- Test Results Summary -->
+        <div class="test-section">
+            <h2>Test Results Summary</h2>
+            <div id="testSummary">
+                <div class="info">
+                    Run the tests above to validate the upload workflow fix.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global configuration
+        let testResults = {
+            apiHealth: null,
+            xAuthToken: null,
+            xPublicAccess: null,
+            payloadFormat: null,
+            completeWorkflow: null,
+            errorValidation: null
+        };
+
+        function getApiBaseUrl() {
+            return document.getElementById('apiBaseUrl').value;
+        }
+
+        function logResult(testName, success, message, data = null) {
+            testResults[testName] = { success, message, data, timestamp: new Date() };
+            updateTestSummary();
+        }
+
+        function updateTestSummary() {
+            const summary = document.getElementById('testSummary');
+            const passed = Object.values(testResults).filter(r => r && r.success).length;
+            const failed = Object.values(testResults).filter(r => r && !r.success).length;
+            const total = Object.values(testResults).filter(r => r !== null).length;
+
+            let statusClass = 'info';
+            if (total > 0) {
+                statusClass = failed === 0 ? 'success' : (passed > 0 ? 'warning' : 'error');
+            }
+
+            summary.innerHTML = `
+                <div class="${statusClass}">
+                    <strong>Test Summary:</strong> ${passed} passed, ${failed} failed, ${total} total
+                    ${failed === 0 && total > 0 ? '<br>✅ All tests passed! Upload workflow fix validated.' : ''}
+                </div>
+            `;
+        }
+
+        function displayResult(elementId, success, message, data = null) {
+            const element = document.getElementById(elementId);
+            const statusClass = success ? 'success' : 'error';
+
+            let content = `<div class="${statusClass}">${message}</div>`;
+
+            if (data) {
+                content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+
+            element.innerHTML = content;
+        }
+
+        async function makeApiRequest(method, endpoint, headers = {}, body = null) {
+            try {
+                const url = `${getApiBaseUrl()}${endpoint}`;
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...headers
+                    }
+                };
+
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                console.log(`Making ${method} request to ${url}`, { headers, body });
+
+                const response = await fetch(url, options);
+                const responseData = await response.text();
+
+                let parsedData;
+                try {
+                    parsedData = JSON.parse(responseData);
+                } catch (e) {
+                    parsedData = { rawResponse: responseData };
+                }
+
+                return {
+                    status: response.status,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    data: parsedData,
+                    ok: response.ok
+                };
+            } catch (error) {
+                console.error('API request failed:', error);
+                return {
+                    status: 0,
+                    error: error.message,
+                    data: null,
+                    ok: false
+                };
+            }
+        }
+
+        async function testApiHealth() {
+            try {
+                const response = await makeApiRequest('GET', '/health');
+
+                if (response.ok) {
+                    displayResult('apiHealthResult', true, '✅ API is healthy and reachable', response.data);
+                    logResult('apiHealth', true, 'API health check passed');
+                } else {
+                    displayResult('apiHealthResult', false, `❌ API health check failed (Status: ${response.status})`, response.data);
+                    logResult('apiHealth', false, `API health check failed: ${response.status}`);
+                }
+            } catch (error) {
+                displayResult('apiHealthResult', false, `❌ API request failed: ${error.message}`);
+                logResult('apiHealth', false, `API request failed: ${error.message}`);
+            }
+        }
+
+        async function testXAuthTokenMethod() {
+            try {
+                // Create a test session first
+                const sessionResponse = await makeApiRequest('POST', '/sessions',
+                    { 'X-Auth-Token': 'test-token-validation' },
+                    {
+                        title: 'X-Auth-Token Test Session',
+                        description: 'Testing X-Auth-Token authentication',
+                        studentEmails: ['test@example.com'],
+                        isPublic: true
+                    }
+                );
+
+                if (sessionResponse.status === 200 || sessionResponse.status === 201) {
+                    const sessionId = sessionResponse.data.data?.id || sessionResponse.data.sessionId;
+
+                    // Test upload with X-Auth-Token
+                    const uploadResponse = await makeApiRequest('POST', `/sessions/${sessionId}/upload`,
+                        { 'X-Auth-Token': 'test-token-validation' },
+                        {
+                            fileName: 'test-video.mp4',
+                            fileSize: 1024000,
+                            contentType: 'video/mp4'
+                        }
+                    );
+
+                    const isSuccess = uploadResponse.status !== 400;
+                    const message = uploadResponse.status === 400
+                        ? '❌ 400 error still occurring - fix not working'
+                        : `✅ X-Auth-Token method working (Status: ${uploadResponse.status})`;
+
+                    displayResult('xAuthTokenResult', isSuccess, message, {
+                        sessionResponse: sessionResponse,
+                        uploadResponse: uploadResponse
+                    });
+                    logResult('xAuthToken', isSuccess, message);
+                } else {
+                    displayResult('xAuthTokenResult', false, `❌ Session creation failed (Status: ${sessionResponse.status})`, sessionResponse);
+                    logResult('xAuthToken', false, `Session creation failed: ${sessionResponse.status}`);
+                }
+            } catch (error) {
+                displayResult('xAuthTokenResult', false, `❌ Test failed: ${error.message}`);
+                logResult('xAuthToken', false, `Test failed: ${error.message}`);
+            }
+        }
+
+        async function testXPublicAccessMethod() {
+            try {
+                // Create a test session with public access
+                const sessionResponse = await makeApiRequest('POST', '/sessions',
+                    { 'X-Public-Access': 'true' },
+                    {
+                        title: 'X-Public-Access Test Session',
+                        description: 'Testing X-Public-Access authentication',
+                        studentEmails: ['test@example.com'],
+                        isPublic: true
+                    }
+                );
+
+                if (sessionResponse.status === 200 || sessionResponse.status === 201) {
+                    const sessionId = sessionResponse.data.data?.id || sessionResponse.data.sessionId;
+
+                    // Test upload with X-Public-Access
+                    const uploadResponse = await makeApiRequest('POST', `/sessions/${sessionId}/upload`,
+                        { 'X-Public-Access': 'true' },
+                        {
+                            fileName: 'test-video.mp4',
+                            fileSize: 1024000,
+                            contentType: 'video/mp4'
+                        }
+                    );
+
+                    const isSuccess = uploadResponse.status !== 400;
+                    const message = uploadResponse.status === 400
+                        ? '❌ 400 error still occurring - fix not working'
+                        : `✅ X-Public-Access method working (Status: ${uploadResponse.status})`;
+
+                    displayResult('xPublicAccessResult', isSuccess, message, {
+                        sessionResponse: sessionResponse,
+                        uploadResponse: uploadResponse
+                    });
+                    logResult('xPublicAccess', isSuccess, message);
+                } else {
+                    displayResult('xPublicAccessResult', false, `❌ Session creation failed (Status: ${sessionResponse.status})`, sessionResponse);
+                    logResult('xPublicAccess', false, `Session creation failed: ${sessionResponse.status}`);
+                }
+            } catch (error) {
+                displayResult('xPublicAccessResult', false, `❌ Test failed: ${error.message}`);
+                logResult('xPublicAccess', false, `Test failed: ${error.message}`);
+            }
+        }
+
+        async function testCorrectPayloadFormat() {
+            try {
+                // Create session
+                const sessionResponse = await makeApiRequest('POST', '/sessions',
+                    { 'X-Public-Access': 'true' },
+                    {
+                        title: 'Payload Format Test Session',
+                        description: 'Testing correct payload format',
+                        studentEmails: ['test@example.com'],
+                        isPublic: true
+                    }
+                );
+
+                if (sessionResponse.status === 200 || sessionResponse.status === 201) {
+                    const sessionId = sessionResponse.data.data?.id || sessionResponse.data.sessionId;
+
+                    // Test with correct 3-field payload
+                    const uploadResponse = await makeApiRequest('POST', `/sessions/${sessionId}/upload`,
+                        { 'X-Public-Access': 'true' },
+                        {
+                            fileName: 'test-video.mp4',
+                            fileSize: 1024000,
+                            contentType: 'video/mp4'
+                        }
+                    );
+
+                    const isSuccess = uploadResponse.status !== 400;
+                    const message = uploadResponse.status === 400
+                        ? '❌ Correct payload format still causing 400 errors'
+                        : `✅ Correct payload format working (Status: ${uploadResponse.status})`;
+
+                    displayResult('payloadFormatResult', isSuccess, message, {
+                        request: { fileName: 'test-video.mp4', fileSize: 1024000, contentType: 'video/mp4' },
+                        response: uploadResponse
+                    });
+                    logResult('payloadFormat', isSuccess, message);
+                }
+            } catch (error) {
+                displayResult('payloadFormatResult', false, `❌ Test failed: ${error.message}`);
+                logResult('payloadFormat', false, `Test failed: ${error.message}`);
+            }
+        }
+
+        async function testPayloadWithExtraFields() {
+            try {
+                // Create session
+                const sessionResponse = await makeApiRequest('POST', '/sessions',
+                    { 'X-Public-Access': 'true' },
+                    {
+                        title: 'Extra Fields Test Session',
+                        description: 'Testing payload with extra fields',
+                        studentEmails: ['test@example.com'],
+                        isPublic: true
+                    }
+                );
+
+                if (sessionResponse.status === 200 || sessionResponse.status === 201) {
+                    const sessionId = sessionResponse.data.data?.id || sessionResponse.data.sessionId;
+
+                    // Test with extra fields (previously caused 400)
+                    const uploadResponse = await makeApiRequest('POST', `/sessions/${sessionId}/upload`,
+                        { 'X-Public-Access': 'true' },
+                        {
+                            fileName: 'test-video.mp4',
+                            fileSize: 1024000,
+                            contentType: 'video/mp4',
+                            studentEmail: 'test@example.com', // Extra field
+                            sessionDate: '2025-01-15',        // Extra field
+                            extraField: 'should be ignored'   // Extra field
+                        }
+                    );
+
+                    const isSuccess = uploadResponse.status !== 400;
+                    const message = uploadResponse.status === 400
+                        ? '❌ Extra fields still causing 400 errors - fix incomplete'
+                        : `✅ Extra fields handled gracefully (Status: ${uploadResponse.status})`;
+
+                    displayResult('payloadFormatResult', isSuccess,
+                        document.getElementById('payloadFormatResult').innerHTML + '<br>' + message,
+                        {
+                            request: 'Payload with extra fields',
+                            response: uploadResponse
+                        }
+                    );
+                }
+            } catch (error) {
+                console.error('Extra fields test failed:', error);
+            }
+        }
+
+        async function testCompleteWorkflow() {
+            try {
+                const formData = {
+                    studentEmail: document.getElementById('studentEmail').value,
+                    studentName: document.getElementById('studentName').value,
+                    trainerName: document.getElementById('trainerName').value,
+                    sessionDate: document.getElementById('sessionDate').value,
+                    notes: document.getElementById('sessionNotes').value
+                };
+
+                // Step 1: Create session
+                const sessionResponse = await makeApiRequest('POST', '/sessions',
+                    { 'X-Public-Access': 'true' },
+                    {
+                        title: `Session for ${formData.studentEmail} - ${formData.sessionDate}`,
+                        description: formData.notes || 'Complete workflow test session',
+                        studentEmails: [formData.studentEmail],
+                        isPublic: true,
+                        metadata: {
+                            studentName: formData.studentName,
+                            trainerName: formData.trainerName,
+                            date: formData.sessionDate,
+                            notes: formData.notes,
+                            uploadType: 'test'
+                        }
+                    }
+                );
+
+                if (sessionResponse.status !== 200 && sessionResponse.status !== 201) {
+                    throw new Error(`Session creation failed: ${sessionResponse.status}`);
+                }
+
+                const sessionId = sessionResponse.data.data?.id || sessionResponse.data.sessionId;
+
+                // Step 2: Get upload URL
+                const uploadResponse = await makeApiRequest('POST', `/sessions/${sessionId}/upload`,
+                    { 'X-Public-Access': 'true' },
+                    {
+                        fileName: 'test-complete-workflow.mp4',
+                        fileSize: 1024000,
+                        contentType: 'video/mp4'
+                    }
+                );
+
+                const isSuccess = uploadResponse.status !== 400 && (uploadResponse.status === 200 || uploadResponse.status === 201);
+                const message = uploadResponse.status === 400
+                    ? '❌ Complete workflow failed with 400 error'
+                    : isSuccess
+                        ? '✅ Complete workflow successful - upload URL received'
+                        : `⚠️ Workflow completed but with status ${uploadResponse.status}`;
+
+                displayResult('completeWorkflowResult', isSuccess || uploadResponse.status !== 400, message, {
+                    sessionCreation: sessionResponse,
+                    uploadUrlRequest: uploadResponse,
+                    formData: formData
+                });
+                logResult('completeWorkflow', isSuccess, message);
+
+            } catch (error) {
+                displayResult('completeWorkflowResult', false, `❌ Complete workflow test failed: ${error.message}`);
+                logResult('completeWorkflow', false, `Complete workflow failed: ${error.message}`);
+            }
+        }
+
+        async function testNo400Errors() {
+            const testScenarios = [
+                {
+                    name: 'Standard upload request',
+                    payload: { fileName: 'test.mp4', fileSize: 1024000, contentType: 'video/mp4' }
+                },
+                {
+                    name: 'Upload with studentEmail field',
+                    payload: { fileName: 'test.mp4', fileSize: 1024000, contentType: 'video/mp4', studentEmail: 'test@example.com' }
+                },
+                {
+                    name: 'Upload with multiple extra fields',
+                    payload: {
+                        fileName: 'test.mp4',
+                        fileSize: 1024000,
+                        contentType: 'video/mp4',
+                        studentEmail: 'test@example.com',
+                        sessionDate: '2025-01-15',
+                        trainerName: 'Test Trainer',
+                        extraField: 'ignored'
+                    }
+                }
+            ];
+
+            try {
+                // Create a test session
+                const sessionResponse = await makeApiRequest('POST', '/sessions',
+                    { 'X-Public-Access': 'true' },
+                    {
+                        title: 'Error Validation Test Session',
+                        description: 'Testing for 400 errors',
+                        studentEmails: ['test@example.com'],
+                        isPublic: true
+                    }
+                );
+
+                if (sessionResponse.status !== 200 && sessionResponse.status !== 201) {
+                    throw new Error(`Session creation failed: ${sessionResponse.status}`);
+                }
+
+                const sessionId = sessionResponse.data.data?.id || sessionResponse.data.sessionId;
+                const results = [];
+                let has400Error = false;
+
+                // Test each scenario
+                for (const scenario of testScenarios) {
+                    const response = await makeApiRequest('POST', `/sessions/${sessionId}/upload`,
+                        { 'X-Public-Access': 'true' },
+                        scenario.payload
+                    );
+
+                    results.push({
+                        scenario: scenario.name,
+                        status: response.status,
+                        success: response.status !== 400
+                    });
+
+                    if (response.status === 400) {
+                        has400Error = true;
+                    }
+                }
+
+                const message = has400Error
+                    ? '❌ 400 errors still occurring - fix not complete'
+                    : '✅ No 400 errors detected - fix validated successfully';
+
+                displayResult('errorValidationResult', !has400Error, message, {
+                    sessionId: sessionId,
+                    testResults: results
+                });
+                logResult('errorValidation', !has400Error, message);
+
+            } catch (error) {
+                displayResult('errorValidationResult', false, `❌ Error validation test failed: ${error.message}`);
+                logResult('errorValidation', false, `Error validation failed: ${error.message}`);
+            }
+        }
+
+        function createTestFile() {
+            // Create a minimal MP4 file
+            const canvas = document.createElement('canvas');
+            canvas.width = 320;
+            canvas.height = 240;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 320, 240);
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.fillText('Test Video', 120, 130);
+
+            canvas.toBlob((blob) => {
+                const file = new File([blob], 'test-video.mp4', { type: 'video/mp4' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                document.getElementById('testFile').files = dataTransfer.files;
+
+                displayResult('completeWorkflowResult', true, '✅ Test video file created and selected');
+            }, 'video/mp4');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('sessionDate').value = today;
+
+            // Test API health on load
+            setTimeout(testApiHealth, 1000);
+        });
+    </script>
+</body>
+</html>

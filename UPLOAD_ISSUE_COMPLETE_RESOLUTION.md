@@ -411,6 +411,12 @@ console.log('🚀 API Request:', {
 2. **CORS Configuration**: Custom authentication headers must be explicitly allowed
 3. **Frontend-Backend Contract**: Payload format must match API models exactly
 4. **Caching Considerations**: CloudFront invalidation required for frontend fixes
+5. **Authentication Handler Consistency**: All Lambda handlers must support the same authentication methods
+6. **API Testing vs Frontend Testing**: curl/API tests can succeed while frontend still fails due to different payload formats
+7. **Multiple Upload Pages**: Different routes (/upload vs /trainer/upload) use different authentication patterns
+8. **Debug Tool Impact**: Debug instrumentation adding extra fields to API payloads can cause validation failures in strict API Gateway models
+9. **API Gateway Validation Layers**: Request validation can cause "Failed to fetch" errors that mimic network issues but are actually validation failures at the infrastructure level
+10. **Progressive Debugging**: When one API endpoint works but another fails, focus on differences in validation models, not just CORS or authentication
 
 ### **Process Improvements:**
 
@@ -418,13 +424,21 @@ console.log('🚀 API Request:', {
 2. **Systematic Testing**: Comprehensive test suites caught edge cases
 3. **Documentation**: Detailed API model documentation prevented similar issues
 4. **Validation Loops**: Multiple validation phases ensured complete resolution
+5. **Real Frontend Testing**: Always test with actual browser/frontend, not just API calls
+6. **Authentication Auditing**: Check all handlers support the same auth methods consistently
 
 ### **Prevention Strategies:**
 
 1. **API Contract Testing**: Automated tests for request/response formats
 2. **CORS Configuration Management**: Centralized CORS header management
 3. **Model Validation Documentation**: Clear API model requirements
-4. **End-to-End Testing**: Regular upload workflow validation
+4. **End-to-End Testing**: Regular upload workflow validation using actual frontend
+5. **Authentication Consistency Checks**: Verify all handlers support same auth patterns
+6. **Multi-Path Testing**: Test all frontend routes (/upload, /trainer/upload) separately
+7. **Browser Network Inspection**: Always verify actual request/response in browser dev tools
+8. **Debug Payload Validation**: Debug tools that add extra fields to API payloads can cause validation failures even when core functionality works
+9. **API Gateway Error Masking**: Strict validation models can cause "Failed to fetch" errors that appear as network issues but are actually validation failures
+10. **Incremental Debugging**: Test API endpoints individually - if one works and another fails, compare their validation models and configurations
 
 ---
 

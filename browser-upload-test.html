@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApexShare Upload Test - Chrome Issue Debug</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            min-width: 150px;
+        }
+
+        button:hover {
+            background: #5a6fd8;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin: 15px 0;
+        }
+
+        .code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 ApexShare Upload Test - Chrome "Failed to fetch" Debug</h1>
+
+        <div class="status info">
+            <strong>Test Purpose:</strong> Verify the exact same upload workflow that's failing for the user
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 1: Create Session</h3>
+            <p>This should work if the frontend properly sends <span class="code">X-Public-Access: true</span> header.</p>
+            <button onclick="testSessionCreation()">Create Test Session</button>
+            <div id="session-status"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 2: Request Upload URL (User's Exact Scenario)</h3>
+            <p>This is the exact request failing with "Failed to fetch" for:</p>
+            <ul>
+                <li>File: <span class="code">GX010492.MP4</span></li>
+                <li>Size: <span class="code">426,210,557 bytes</span> (~406 MB)</li>
+                <li>Type: <span class="code">video/mp4</span></li>
+            </ul>
+            <button onclick="testUploadUrlRequest()" id="upload-test-btn" disabled>Test Upload URL Request</button>
+            <div id="upload-status"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Debug Information</h3>
+            <div id="debug-info"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Request/Response Log</h3>
+            <div id="log" class="log">Logs will appear here...\n</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com/v1';
+        let currentSessionId = null;
+
+        // Log function
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toISOString();
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        // Display status
+        function displayStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // Make API request with proper headers
+        async function makeAPIRequest(method, url, data = null) {
+            log(`🔍 Making ${method} request to: ${url}`);
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                'X-Public-Access': 'true'  // THIS IS THE CRITICAL HEADER
+            };
+
+            log(`📝 Headers: ${JSON.stringify(headers, null, 2)}`);
+
+            if (data) {
+                log(`📦 Payload: ${JSON.stringify(data, null, 2)}`);
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers,
+                    body: data ? JSON.stringify(data) : null,
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+
+                log(`📊 Response Status: ${response.status} ${response.statusText}`);
+
+                // Log response headers
+                const responseHeaders = {};
+                response.headers.forEach((value, key) => {
+                    responseHeaders[key] = value;
+                });
+                log(`📋 Response Headers: ${JSON.stringify(responseHeaders, null, 2)}`);
+
+                let responseData;
+                try {
+                    responseData = await response.json();
+                    log(`📄 Response Body: ${JSON.stringify(responseData, null, 2)}`);
+                } catch (e) {
+                    responseData = await response.text();
+                    log(`📄 Response Body (text): ${responseData}`);
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseData?.error?.message || responseData?.message || 'Request failed'}`);
+                }
+
+                return {
+                    status: response.status,
+                    data: responseData
+                };
+
+            } catch (error) {
+                log(`❌ Request failed: ${error.message}`);
+
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    log(`🔧 This is likely a CORS or network connectivity issue`);
+                    log(`🔧 Check if the X-Public-Access header is being sent properly`);
+                }
+
+                throw error;
+            }
+        }
+
+        // Test session creation
+        async function testSessionCreation() {
+            displayStatus('session-status', '⏳ Creating test session...', 'info');
+
+            const sessionData = {
+                studentName: 'Test Student',
+                studentEmail: 'test@example.com',
+                sessionDate: '2025-09-22',
+                trainerName: 'Test Trainer',
+                notes: 'Browser test session for debugging Chrome upload issue'
+            };
+
+            try {
+                const response = await makeAPIRequest('POST', `${API_BASE_URL}/sessions`, sessionData);
+
+                if (response.status === 201 && response.data.success) {
+                    currentSessionId = response.data.data.id;
+                    displayStatus('session-status', `✅ Session created successfully! ID: ${currentSessionId}`, 'success');
+                    document.getElementById('upload-test-btn').disabled = false;
+
+                    updateDebugInfo();
+                } else {
+                    displayStatus('session-status', `❌ Unexpected response: ${JSON.stringify(response)}`, 'error');
+                }
+            } catch (error) {
+                displayStatus('session-status', `❌ Session creation failed: ${error.message}`, 'error');
+                log(`💡 If you see "Failed to fetch", the frontend is not sending the X-Public-Access header correctly`);
+            }
+        }
+
+        // Test upload URL request (user's exact failing scenario)
+        async function testUploadUrlRequest() {
+            if (!currentSessionId) {
+                displayStatus('upload-status', '❌ No session available. Create a session first.', 'error');
+                return;
+            }
+
+            displayStatus('upload-status', '⏳ Testing upload URL request with user\'s exact payload...', 'info');
+
+            // This is the EXACT payload that fails for the user
+            const uploadPayload = {
+                fileName: "GX010492.MP4",
+                fileSize: 426210557,
+                contentType: "video/mp4"
+            };
+
+            try {
+                const response = await makeAPIRequest('POST', `${API_BASE_URL}/sessions/${currentSessionId}/upload`, uploadPayload);
+
+                if (response.status === 200 && response.data.success) {
+                    displayStatus('upload-status', `✅ Upload URL request SUCCESSFUL! The issue is RESOLVED!`, 'success');
+                    log(`🎉 Upload details received:`);
+                    log(`   - Upload ID: ${response.data.data.uploadId}`);
+                    log(`   - Upload URL: ${response.data.data.uploadUrl ? 'Provided' : 'Missing'}`);
+                    log(`   - Chunk Size: ${response.data.data.chunkSize || 'Not specified'}`);
+                    log(`   - Expires At: ${response.data.data.expiresAt || 'Not specified'}`);
+                } else {
+                    displayStatus('upload-status', `❌ Unexpected response: ${JSON.stringify(response)}`, 'error');
+                }
+            } catch (error) {
+                displayStatus('upload-status', `❌ Upload URL request failed: ${error.message}`, 'error');
+
+                if (error.message.includes('Failed to fetch')) {
+                    log(`🔧 ROOT CAUSE: The frontend is not sending the X-Public-Access header`);
+                    log(`🔧 SOLUTION: Fix the frontend API service to include this header`);
+                    log(`🔧 Current status: Frontend API middleware should automatically add this header`);
+                } else if (error.message.includes('401') || error.message.includes('403')) {
+                    log(`🔧 ROOT CAUSE: Authentication issue - X-Public-Access header not working`);
+                    log(`🔧 SOLUTION: Check Lambda function token validation logic`);
+                } else if (error.message.includes('400')) {
+                    log(`🔧 ROOT CAUSE: Request validation issue - API Gateway model rejection`);
+                    log(`🔧 SOLUTION: Fix API Gateway request validation model`);
+                }
+            }
+        }
+
+        // Update debug information
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debug-info');
+
+            const browserInfo = {
+                userAgent: navigator.userAgent,
+                browser: getBrowserName(),
+                cookiesEnabled: navigator.cookieEnabled,
+                language: navigator.language,
+                platform: navigator.platform,
+                onLine: navigator.onLine
+            };
+
+            const networkInfo = getNetworkInfo();
+
+            let html = `
+                <h4>🌐 Browser Information</h4>
+                <ul>
+                    <li><strong>Browser:</strong> ${browserInfo.browser}</li>
+                    <li><strong>Platform:</strong> ${browserInfo.platform}</li>
+                    <li><strong>Language:</strong> ${browserInfo.language}</li>
+                    <li><strong>Online:</strong> ${browserInfo.onLine ? '✅' : '❌'}</li>
+                    <li><strong>Cookies:</strong> ${browserInfo.cookiesEnabled ? '✅' : '❌'}</li>
+                </ul>
+
+                <h4>🔗 Network Information</h4>
+                <ul>
+                    <li><strong>Connection Type:</strong> ${networkInfo.type}</li>
+                    <li><strong>Effective Type:</strong> ${networkInfo.effectiveType}</li>
+                    <li><strong>Downlink:</strong> ${networkInfo.downlink} Mbps</li>
+                    <li><strong>RTT:</strong> ${networkInfo.rtt} ms</li>
+                </ul>
+
+                <h4>🔧 Expected Headers</h4>
+                <p>The frontend should automatically send these headers:</p>
+                <ul>
+                    <li><span class="highlight">X-Public-Access: true</span> (for unauthenticated requests)</li>
+                    <li>Content-Type: application/json</li>
+                    <li>Accept: application/json</li>
+                    <li>X-Requested-With: [request-id]</li>
+                </ul>
+            `;
+
+            if (currentSessionId) {
+                html += `
+                    <h4>📋 Current Session</h4>
+                    <ul>
+                        <li><strong>Session ID:</strong> <span class="code">${currentSessionId}</span></li>
+                    </ul>
+                `;
+            }
+
+            debugInfo.innerHTML = html;
+        }
+
+        function getBrowserName() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Chrome') && !ua.includes('Edge')) return 'Chrome';
+            if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Edge')) return 'Edge';
+            return 'Unknown';
+        }
+
+        function getNetworkInfo() {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            return {
+                type: connection?.type || 'unknown',
+                effectiveType: connection?.effectiveType || 'unknown',
+                downlink: connection?.downlink || 'unknown',
+                rtt: connection?.rtt || 'unknown'
+            };
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDebugInfo();
+            log('🚀 Browser upload test initialized');
+            log(`🎯 Testing the exact scenario that fails for the user`);
+            log(`📍 API Base URL: ${API_BASE_URL}`);
+        });
+    </script>
+</body>
+</html>

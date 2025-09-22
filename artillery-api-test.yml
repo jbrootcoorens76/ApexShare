@@ -1,0 +1,59 @@
+config:
+  target: 'https://l0hx9zgow8.execute-api.eu-west-1.amazonaws.com'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      name: "Load test"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+      X-Public-Access: 'true'
+      Origin: 'https://apexshare.be'
+
+scenarios:
+  - name: "Session Creation and Upload URL Generation"
+    weight: 70
+    flow:
+      - post:
+          url: "/v1/sessions"
+          json:
+            studentName: "Load Test User {{ $randomString() }}"
+            studentEmail: "loadtest{{ $randomInt(1000, 9999) }}@example.com"
+            sessionDate: "2025-01-22"
+            notes: "Artillery load test"
+          capture:
+            - json: "$.data.id"
+              as: "sessionId"
+          expect:
+            - statusCode: 201
+            - hasProperty: "data.id"
+
+      - post:
+          url: "/v1/sessions/{{ sessionId }}/upload"
+          headers:
+            X-Debug-Student-Email: "loadtest@example.com"
+            X-Debug-Student-Name: "Load Test User"
+            X-Debug-Notes: "Artillery load test"
+          json:
+            fileName: "loadtest{{ $randomInt(1, 1000) }}.mp4"
+            fileSize: "{{ $randomInt(1048576, 10485760) }}"
+            contentType: "video/mp4"
+          expect:
+            - statusCode: 200
+            - hasProperty: "data.uploadUrl"
+
+  - name: "Test Undefined Session ID Bug"
+    weight: 30
+    flow:
+      - post:
+          url: "/v1/sessions/undefined/upload"
+          json:
+            fileName: "undefined-test.mp4"
+            fileSize: 1048576
+            contentType: "video/mp4"
+          expect:
+            # This SHOULD fail, but we expect it to succeed (which is the bug)
+            - statusCode: 200

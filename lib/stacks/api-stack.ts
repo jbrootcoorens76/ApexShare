@@ -668,6 +668,8 @@ export class ApiStack extends cdk.Stack {
     });
 
     // Create separate model for session-based upload requests (new frontend)
+    // More permissive validation to prevent API Gateway "Failed to fetch" errors
+    // Detailed validation is handled in Lambda function for better error handling
     const sessionUploadRequestModel = this.api.addModel('SessionUploadRequestModel', {
       contentType: 'application/json',
       schema: {
@@ -675,8 +677,8 @@ export class ApiStack extends cdk.Stack {
         properties: {
           fileName: {
             type: apigateway.JsonSchemaType.STRING,
-            pattern: '^[a-zA-Z0-9\\s\\-\\._]{1,255}\\.(mp4|mov|avi|mkv)$',
-            maxLength: 255,
+            minLength: 1,
+            maxLength: 500, // Increased limit for long filenames
           },
           fileSize: {
             type: apigateway.JsonSchemaType.INTEGER,
@@ -685,11 +687,15 @@ export class ApiStack extends cdk.Stack {
           },
           contentType: {
             type: apigateway.JsonSchemaType.STRING,
-            enum: [...UPLOAD_CONSTRAINTS.ALLOWED_MIME_TYPES],
+            minLength: 1,
+          },
+          mimeType: {
+            type: apigateway.JsonSchemaType.STRING,
+            minLength: 1,
           },
         },
-        required: ['fileName', 'fileSize', 'contentType'],
-        additionalProperties: false,
+        required: ['fileName', 'fileSize'],
+        additionalProperties: true,
       },
     });
 

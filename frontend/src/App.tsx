@@ -21,6 +21,7 @@ import { TrainerDashboard } from '@/pages/trainer/TrainerDashboard'
 import { StudentDashboard } from '@/pages/student/StudentDashboard'
 import { UploadPage } from '@/pages/trainer/UploadPage'
 import { DirectUploadPage } from '@/pages/DirectUploadPage'
+import { DirectUploadPageDebug } from '@/pages/DirectUploadPageDebug'
 import { SessionPage } from '@/pages/shared/SessionPage'
 import { DownloadPage } from '@/pages/student/DownloadPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -89,6 +90,9 @@ function App() {
 
           {/* Public upload route */}
           <Route path="/upload" element={<DirectUploadPage />} />
+
+          {/* Debug upload route */}
+          <Route path="/upload-debug" element={<DirectUploadPageDebug />} />
 
           {/* Session access route (public but may require access code) */}
           <Route path="/session/:sessionId" element={<SessionPage />} />
