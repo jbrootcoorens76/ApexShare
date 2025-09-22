@@ -16,20 +16,38 @@ ApexShare is a serverless AWS solution for motorcycle trainers to upload GoPro f
 - **Email**: SES (Simple Email Service)
 - **Authentication**: AWS Cognito (optional)
 
-### Planned Directory Structure
+### Current Directory Structure
 ```
-├── lib/                     # Infrastructure stacks (CDK/CloudFormation)
-│   ├── storage-stack.ts     # S3, DynamoDB
-│   ├── api-stack.ts         # API Gateway, Lambda
-│   ├── frontend-stack.ts    # S3 Static Site, CloudFront
-│   └── email-stack.ts       # SES configuration
-├── lambda/                  # Lambda function code
-│   ├── upload-handler/      # Generate presigned S3 upload URLs
-│   ├── email-sender/        # Send notification emails via SES
-│   └── download-handler/    # Generate presigned download URLs
-└── frontend/                # Static website
-    ├── src/                 # Source files
-    └── dist/                # Built files for S3 deployment
+├── docs/                    # Project documentation
+│   ├── guides/             # User and developer guides
+│   ├── reports/            # Investigation and validation reports
+│   ├── architecture/       # Architecture documentation
+│   ├── deployment/         # Deployment related docs
+│   └── testing/            # Testing documentation
+├── tests/                   # All testing related files
+│   ├── api/               # API testing scripts
+│   ├── integration/       # Integration tests
+│   ├── chrome/            # Chrome-specific tests
+│   ├── manual/            # Manual testing files (HTML)
+│   ├── config/            # Test configuration
+│   └── performance/       # Performance tests
+├── scripts/                # Utility and debug scripts
+│   ├── debug/             # Debug and investigation scripts
+│   ├── validation/        # Validation scripts
+│   └── archives/          # Archived files
+├── lib/                    # Infrastructure stacks (CDK/CloudFormation)
+│   ├── storage-stack.ts   # S3, DynamoDB
+│   ├── api-stack.ts       # API Gateway, Lambda
+│   ├── frontend-stack.ts  # S3 Static Site, CloudFront
+│   └── email-stack.ts     # SES configuration
+├── lambda/                 # Lambda function code
+│   ├── upload-handler/    # Generate presigned S3 upload URLs
+│   ├── email-sender/      # Send notification emails via SES
+│   └── download-handler/  # Generate presigned download URLs
+├── frontend/               # Static website
+│   ├── src/               # Source files
+│   └── dist/              # Built files for S3 deployment
+└── cypress/                # End-to-end testing with Cypress
 ```
 
 ## Key Implementation Details
