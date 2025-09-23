@@ -1,0 +1,132 @@
+{
+  "totalWorkflows": 8,
+  "passedWorkflows": 1,
+  "failedWorkflows": 7,
+  "userScenarios": [
+    {
+      "scenarioId": "E2E-001",
+      "description": "Standard Trainer Upload Workflow",
+      "status": "FAIL",
+      "details": {
+        "duration": 1048,
+        "error": "Required form elements not found on page"
+      },
+      "timestamp": "2025-09-23T04:21:06.523Z",
+      "duration": 1048
+    },
+    {
+      "scenarioId": "E2E-002",
+      "description": "Chrome Upload Compatibility (Phase 2 Fix)",
+      "status": "FAIL",
+      "details": {
+        "duration": 617,
+        "error": "page.waitForTimeout is not a function"
+      },
+      "timestamp": "2025-09-23T04:21:07.204Z",
+      "duration": 617
+    },
+    {
+      "scenarioId": "E2E-003-iPhone 12",
+      "description": "Mobile Experience (iPhone 12)",
+      "status": "FAIL",
+      "details": {
+        "duration": 613,
+        "error": "page.isVisible is not a function"
+      },
+      "timestamp": "2025-09-23T04:21:07.881Z",
+      "duration": 613
+    },
+    {
+      "scenarioId": "E2E-003-Samsung Galaxy S21",
+      "description": "Mobile Experience (Samsung Galaxy S21)",
+      "status": "FAIL",
+      "details": {
+        "duration": 554,
+        "error": "page.isVisible is not a function"
+      },
+      "timestamp": "2025-09-23T04:21:08.435Z",
+      "duration": 554
+    },
+    {
+      "scenarioId": "E2E-003-iPad",
+      "description": "Mobile Experience (iPad)",
+      "status": "FAIL",
+      "details": {
+        "duration": 557,
+        "error": "page.isVisible is not a function"
+      },
+      "timestamp": "2025-09-23T04:21:08.992Z",
+      "duration": 557
+    },
+    {
+      "scenarioId": "E2E-003",
+      "description": "Overall Mobile Compatibility",
+      "status": "FAIL",
+      "details": {
+        "compatibilityRate": 0,
+        "error": "Mobile compatibility below 80% threshold"
+      },
+      "timestamp": "2025-09-23T04:21:08.992Z",
+      "duration": 0
+    },
+    {
+      "scenarioId": "E2E-004",
+      "description": "Error Handling Scenarios",
+      "status": "FAIL",
+      "details": {
+        "duration": 639,
+        "error": "No element found for selector: #trainer-email"
+      },
+      "timestamp": "2025-09-23T04:21:09.697Z",
+      "duration": 639
+    },
+    {
+      "scenarioId": "E2E-005",
+      "description": "Accessibility Compliance",
+      "status": "PASS",
+      "details": {
+        "duration": 659,
+        "accessibilityRate": 100,
+        "accessibilityScore": {
+          "keyboardNavigation": true,
+          "focusIndicators": true,
+          "imageAltText": true,
+          "headingStructure": true,
+          "formLabels": true
+        },
+        "tabbableElementsFound": 10
+      },
+      "timestamp": "2025-09-23T04:21:10.419Z",
+      "duration": 659
+    }
+  ],
+  "browserCompatibility": {
+    "chrome": {
+      "tested": false,
+      "passed": false
+    },
+    "firefox": {
+      "tested": false,
+      "passed": false
+    },
+    "safari": {
+      "tested": false,
+      "passed": false
+    }
+  },
+  "performanceMetrics": {
+    "uploadTimes": [],
+    "pageLoadTimes": [
+      1036
+    ],
+    "emailDeliveryTimes": []
+  },
+  "successRate": 12.5,
+  "averagePageLoadTime": 1036,
+  "readyForPhase33": false,
+  "qualityAssessment": {
+    "userExperienceReady": false,
+    "browserCompatibilityReady": false,
+    "phase2ValidationsComplete": true
+  }
+}

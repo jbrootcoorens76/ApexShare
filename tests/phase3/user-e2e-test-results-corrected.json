@@ -1,0 +1,459 @@
+{
+  "totalWorkflows": 8,
+  "passedWorkflows": 2,
+  "failedWorkflows": 6,
+  "userScenarios": [
+    {
+      "scenarioId": "E2E-001",
+      "description": "Standard Trainer Upload Workflow",
+      "status": "PASS",
+      "details": {
+        "duration": 6705,
+        "pageLoadTime": 1273,
+        "formValidation": "Passed",
+        "uploadComponentsPresent": true,
+        "phase2Validation": "No NaN/undefined errors detected",
+        "uploadButtonLogic": "Correctly disabled without file"
+      },
+      "timestamp": "2025-09-23T04:24:29.253Z",
+      "duration": 6705
+    },
+    {
+      "scenarioId": "E2E-002",
+      "description": "Chrome Upload Compatibility (Phase 2 Fix)",
+      "status": "FAIL",
+      "details": {
+        "duration": 1348,
+        "error": "page.waitForTimeout is not a function",
+        "screenshot": "/Users/jimmybrootcoorens/Library/Mobile Documents/com~apple~CloudDocs/JBIT /apps/ApexShare/tests/phase3/screenshot-E2E-002-error-1758601470604.png"
+      },
+      "timestamp": "2025-09-23T04:24:30.661Z",
+      "duration": 1348
+    },
+    {
+      "scenarioId": "E2E-003-iPhone 12",
+      "description": "Mobile Experience (iPhone 12)",
+      "status": "FAIL",
+      "details": {
+        "viewport": "390x844",
+        "device": "iPhone 12",
+        "responsive": true,
+        "elementsAccessible": false,
+        "elementVisibility": {
+          "form": {
+            "exists": true,
+            "visible": true,
+            "accessible": true
+          },
+          "fileUpload": {
+            "exists": true,
+            "visible": true,
+            "accessible": true
+          },
+          "uploadButton": {
+            "exists": true,
+            "visible": true,
+            "accessible": false
+          },
+          "studentEmail": {
+            "exists": true,
+            "visible": true,
+            "accessible": true
+          }
+        },
+        "responsiveMetrics": {
+          "bodyWidth": 390,
+          "htmlWidth": 390,
+          "viewportWidth": 390,
+          "hasHorizontalScroll": false
+        },
+        "duration": 1056,
+        "error": "Mobile accessibility or responsive design issues detected"
+      },
+      "timestamp": "2025-09-23T04:24:31.768Z",
+      "duration": 1056
+    },
+    {
+      "scenarioId": "E2E-003-Samsung Galaxy S21",
+      "description": "Mobile Experience (Samsung Galaxy S21)",
+      "status": "FAIL",
+      "details": {
+        "viewport": "412x915",
+        "device": "Samsung Galaxy S21",
+        "responsive": true,
+        "elementsAccessible": false,
+        "elementVisibility": {
+          "form": {
+            "exists": true,
+            "visible": true,
+            "accessible": true
+          },
+          "fileUpload": {
+            "exists": true,
+            "visible": true,
+            "accessible": true
+          },
+          "uploadButton": {
+            "exists": true,
+            "visible": true,
+            "accessible": false
+          },
+          "studentEmail": {
+            "exists": true,
+            "visible": true,
+            "accessible": true
+          }
+        },
+        "responsiveMetrics": {
+          "bodyWidth": 412,
+          "htmlWidth": 412,
+          "viewportWidth": 412,
+          "hasHorizontalScroll": false
+        },
+        "duration": 989,
+        "error": "Mobile accessibility or responsive design issues detected"
+      },
+      "timestamp": "2025-09-23T04:24:32.758Z",
+      "duration": 989
+    },
+    {
+      "scenarioId": "E2E-003-iPad",
+      "description": "Mobile Experience (iPad)",
+      "status": "FAIL",
+      "details": {
+        "viewport": "768x1024",
+        "device": "iPad",
+        "responsive": true,
+        "elementsAccessible": false,
+        "elementVisibility": {
+          "form": {
+            "exists": true,
+            "visible": true,
+            "accessible": true
+          },
+          "fileUpload": {
+            "exists": true,
+            "visible": true,
+            "accessible": true
+          },
+          "uploadButton": {
+            "exists": true,
+            "visible": true,
+            "accessible": false
+          },
+          "studentEmail": {
+            "exists": true,
+            "visible": true,
+            "accessible": true
+          }
+        },
+        "responsiveMetrics": {
+          "bodyWidth": 768,
+          "htmlWidth": 768,
+          "viewportWidth": 768,
+          "hasHorizontalScroll": false
+        },
+        "duration": 548,
+        "error": "Mobile accessibility or responsive design issues detected"
+      },
+      "timestamp": "2025-09-23T04:24:33.307Z",
+      "duration": 548
+    },
+    {
+      "scenarioId": "E2E-003",
+      "description": "Overall Mobile Compatibility",
+      "status": "FAIL",
+      "details": {
+        "compatibilityRate": 0,
+        "error": "Mobile compatibility below 80% threshold",
+        "detailedResults": [
+          {
+            "viewport": "390x844",
+            "device": "iPhone 12",
+            "responsive": true,
+            "elementsAccessible": false,
+            "elementVisibility": {
+              "form": {
+                "exists": true,
+                "visible": true,
+                "accessible": true
+              },
+              "fileUpload": {
+                "exists": true,
+                "visible": true,
+                "accessible": true
+              },
+              "uploadButton": {
+                "exists": true,
+                "visible": true,
+                "accessible": false
+              },
+              "studentEmail": {
+                "exists": true,
+                "visible": true,
+                "accessible": true
+              }
+            },
+            "responsiveMetrics": {
+              "bodyWidth": 390,
+              "htmlWidth": 390,
+              "viewportWidth": 390,
+              "hasHorizontalScroll": false
+            },
+            "duration": 1056
+          },
+          {
+            "viewport": "412x915",
+            "device": "Samsung Galaxy S21",
+            "responsive": true,
+            "elementsAccessible": false,
+            "elementVisibility": {
+              "form": {
+                "exists": true,
+                "visible": true,
+                "accessible": true
+              },
+              "fileUpload": {
+                "exists": true,
+                "visible": true,
+                "accessible": true
+              },
+              "uploadButton": {
+                "exists": true,
+                "visible": true,
+                "accessible": false
+              },
+              "studentEmail": {
+                "exists": true,
+                "visible": true,
+                "accessible": true
+              }
+            },
+            "responsiveMetrics": {
+              "bodyWidth": 412,
+              "htmlWidth": 412,
+              "viewportWidth": 412,
+              "hasHorizontalScroll": false
+            },
+            "duration": 989
+          },
+          {
+            "viewport": "768x1024",
+            "device": "iPad",
+            "responsive": true,
+            "elementsAccessible": false,
+            "elementVisibility": {
+              "form": {
+                "exists": true,
+                "visible": true,
+                "accessible": true
+              },
+              "fileUpload": {
+                "exists": true,
+                "visible": true,
+                "accessible": true
+              },
+              "uploadButton": {
+                "exists": true,
+                "visible": true,
+                "accessible": false
+              },
+              "studentEmail": {
+                "exists": true,
+                "visible": true,
+                "accessible": true
+              }
+            },
+            "responsiveMetrics": {
+              "bodyWidth": 768,
+              "htmlWidth": 768,
+              "viewportWidth": 768,
+              "hasHorizontalScroll": false
+            },
+            "duration": 548
+          }
+        ]
+      },
+      "timestamp": "2025-09-23T04:24:33.307Z",
+      "duration": 0
+    },
+    {
+      "scenarioId": "E2E-004",
+      "description": "Error Handling Scenarios",
+      "status": "PASS",
+      "details": {
+        "duration": 1089,
+        "successRate": 75,
+        "testResults": [
+          {
+            "test": "Empty Form Protection",
+            "status": "PASS",
+            "message": "Upload button correctly disabled for empty form"
+          },
+          {
+            "test": "Email Validation",
+            "status": "FAIL",
+            "message": "page.waitForTimeout is not a function"
+          },
+          {
+            "test": "Past Date Prevention",
+            "status": "PASS",
+            "message": "Past date selection correctly prevented"
+          },
+          {
+            "test": "Network Error Handling",
+            "status": "PASS",
+            "message": "Network offline simulation completed"
+          }
+        ],
+        "testsCompleted": 4
+      },
+      "timestamp": "2025-09-23T04:24:34.462Z",
+      "duration": 1089
+    },
+    {
+      "scenarioId": "E2E-005",
+      "description": "Accessibility Compliance",
+      "status": "FAIL",
+      "details": {
+        "duration": 1057,
+        "error": "Accessibility score 60% below 80% threshold",
+        "accessibilityRate": 60,
+        "accessibilityScore": {
+          "keyboardNavigation": true,
+          "focusIndicators": true,
+          "ariaLabels": false,
+          "semanticStructure": false,
+          "colorContrast": true
+        },
+        "keyboardNavResults": [
+          {
+            "tagName": "INPUT",
+            "type": "email",
+            "id": "",
+            "className": "input pl-10",
+            "tabIndex": 0,
+            "ariaLabel": "",
+            "ariaLabelledBy": ""
+          },
+          {
+            "tagName": "INPUT",
+            "type": "text",
+            "id": "",
+            "className": "input pl-10",
+            "tabIndex": 0,
+            "ariaLabel": "",
+            "ariaLabelledBy": ""
+          },
+          {
+            "tagName": "INPUT",
+            "type": "text",
+            "id": "",
+            "className": "input pl-10",
+            "tabIndex": 0,
+            "ariaLabel": "",
+            "ariaLabelledBy": ""
+          },
+          {
+            "tagName": "INPUT",
+            "type": "date",
+            "id": "",
+            "className": "input pl-10",
+            "tabIndex": 0,
+            "ariaLabel": "",
+            "ariaLabelledBy": ""
+          },
+          {
+            "tagName": "TEXTAREA",
+            "type": "textarea",
+            "id": "",
+            "className": "input pl-10",
+            "tabIndex": 0,
+            "ariaLabel": "",
+            "ariaLabelledBy": ""
+          },
+          {
+            "tagName": "BUTTON",
+            "type": "submit",
+            "id": "",
+            "className": "w-full btn btn-primary",
+            "tabIndex": 0,
+            "ariaLabel": "Upload video file",
+            "ariaLabelledBy": ""
+          }
+        ],
+        "semanticTest": {
+          "formsCount": 0,
+          "inputsCount": 6,
+          "labeledInputsCount": 0,
+          "buttonsCount": 1,
+          "headingsCount": 2,
+          "inputLabelRatio": 0
+        },
+        "colorContrastTest": {
+          "elementsChecked": 17,
+          "contrastIssues": 0
+        },
+        "tabbableElementsFound": 6,
+        "focusIndicatorPresent": true
+      },
+      "timestamp": "2025-09-23T04:24:35.567Z",
+      "duration": 1057
+    }
+  ],
+  "browserCompatibility": {
+    "chrome": {
+      "tested": false,
+      "passed": false,
+      "version": "Chrome/140.0.7339.82"
+    },
+    "firefox": {
+      "tested": false,
+      "passed": false,
+      "version": ""
+    },
+    "safari": {
+      "tested": false,
+      "passed": false,
+      "version": ""
+    }
+  },
+  "performanceMetrics": {
+    "uploadTimes": [],
+    "pageLoadTimes": [
+      1273
+    ],
+    "responseTimes": []
+  },
+  "accessibilityScore": {
+    "keyboardNavigation": true,
+    "focusIndicators": true,
+    "ariaLabels": false,
+    "semanticStructure": false,
+    "colorContrast": true
+  },
+  "mobileCompatibility": {
+    "iPhone": {
+      "tested": true,
+      "passed": false
+    },
+    "android": {
+      "tested": true,
+      "passed": false
+    },
+    "tablet": {
+      "tested": true,
+      "passed": false
+    }
+  },
+  "successRate": 25,
+  "averagePageLoadTime": 1273,
+  "readyForPhase33": false,
+  "qualityAssessment": {
+    "userExperienceReady": false,
+    "browserCompatibilityReady": false,
+    "mobileCompatibilityReady": false,
+    "accessibilityReady": false,
+    "phase2ValidationsComplete": true
+  }
+}
