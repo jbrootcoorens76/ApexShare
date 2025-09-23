@@ -252,6 +252,7 @@ export const DirectUploadPage: React.FC = () => {
           const startTime = Date.now()
           xhr.open('PUT', uploadResponse.data!.uploadUrl)
           xhr.setRequestHeader('Content-Type', state.selectedFile!.type)
+          xhr.setRequestHeader('x-amz-server-side-encryption', 'AES256')
           xhr.send(state.selectedFile)
         })
       }

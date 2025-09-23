@@ -46,6 +46,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
 const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
+const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
 const uuid_1 = require("uuid");
 const crypto = __importStar(require("crypto"));
@@ -494,14 +495,31 @@ function getOptimalChunkSize(fileSize) {
  * Create multipart upload for chunked uploads
  */
 async function createMultipartUpload(s3Key, body) {
-    // For now, we'll use a simple presigned URL approach
-    // In a full implementation, this would use S3's CreateMultipartUpload API
-    // and return presigned URLs for each part
-    // Generate a base URL that the frontend can use with part numbers
-    const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
-    return {
-        uploadUrl: baseUrl,
-    };
+    try {
+        // Create a PUT command with server-side encryption
+        const putCommand = new client_s3_1.PutObjectCommand({
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: s3Key,
+            ContentType: body.mimeType || body.contentType || 'video/mp4',
+            ContentLength: body.fileSize,
+            ServerSideEncryption: 'AES256',
+            Metadata: {
+                'original-filename': body.fileName,
+                'upload-type': 'multipart'
+            }
+        });
+        // Generate presigned URL with encryption headers
+        const uploadUrl = await (0, s3_request_presigner_1.getSignedUrl)(s3Client, putCommand, {
+            expiresIn: PRESIGNED_URL_EXPIRY,
+        });
+        return {
+            uploadUrl: uploadUrl,
+        };
+    }
+    catch (error) {
+        console.error('Error creating multipart upload presigned URL:', error);
+        throw new Error('Failed to create upload URL');
+    }
 }
 /**
  * Store session upload metadata in DynamoDB

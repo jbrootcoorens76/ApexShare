@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S3 Encryption Header Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+    }
+    .error {
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .success-btn {
+      background-color: #28a745;
+      color: white;
+    }
+    input[type="file"] {
+      margin: 10px 0;
+    }
+    .log {
+      background-color: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>S3 Encryption Header Test</h1>
+  <p>This test validates that the frontend properly includes the <code>x-amz-server-side-encryption: AES256</code> header in PUT requests to S3.</p>
+
+  <div class="test-section">
+    <h2>Test Configuration</h2>
+    <div>
+      <label>API Base URL:</label>
+      <input type="text" id="apiUrl" value="https://api.apexshare.training" style="width: 300px; margin-left: 10px;">
+    </div>
+    <div>
+      <label>Session Access Code:</label>
+      <input type="text" id="accessCode" placeholder="Enter session access code" style="width: 200px; margin-left: 10px;">
+    </div>
+    <div>
+      <label>Student Name:</label>
+      <input type="text" id="studentName" placeholder="Enter student name" style="width: 200px; margin-left: 10px;">
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>File Upload Test</h2>
+    <div>
+      <label>Select file (small test file recommended):</label>
+      <input type="file" id="fileInput" accept="video/*,.mp4,.mov,.avi">
+    </div>
+    <button class="primary" onclick="runEncryptionHeaderTest()">Test Upload with Encryption Header</button>
+    <button onclick="clearLog()">Clear Log</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Test Results</h2>
+    <div id="testLog" class="log">Test not started yet...</div>
+  </div>
+
+  <script>
+    let testLog = '';
+
+    function log(message, type = 'info') {
+      const timestamp = new Date().toISOString();
+      const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+      testLog += logEntry;
+      document.getElementById('testLog').textContent = testLog;
+      console.log(logEntry);
+    }
+
+    function clearLog() {
+      testLog = '';
+      document.getElementById('testLog').textContent = 'Log cleared...';
+    }
+
+    async function runEncryptionHeaderTest() {
+      const apiUrl = document.getElementById('apiUrl').value;
+      const accessCode = document.getElementById('accessCode').value;
+      const studentName = document.getElementById('studentName').value;
+      const fileInput = document.getElementById('fileInput');
+
+      if (!fileInput.files[0]) {
+        log('Please select a file first', 'error');
+        return;
+      }
+
+      if (!accessCode || !studentName) {
+        log('Please enter access code and student name', 'error');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      log(`Starting encryption header test with file: ${file.name} (${file.size} bytes)`);
+
+      try {
+        // Step 1: Get session by access code
+        log('Step 1: Getting session by access code...');
+        const sessionResponse = await fetch(`${apiUrl}/sessions/access`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Public-Access': 'true'
+          },
+          body: JSON.stringify({
+            accessCode: accessCode,
+            studentName: studentName
+          })
+        });
+
+        if (!sessionResponse.ok) {
+          throw new Error(`Session access failed: ${sessionResponse.status} ${sessionResponse.statusText}`);
+        }
+
+        const sessionData = await sessionResponse.json();
+        log(`Session obtained: ${sessionData.data.sessionId}`);
+
+        // Step 2: Get presigned upload URL
+        log('Step 2: Getting presigned upload URL...');
+        const uploadUrlResponse = await fetch(`${apiUrl}/sessions/${sessionData.data.sessionId}/upload`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Public-Access': 'true'
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            fileSize: file.size,
+            contentType: file.type
+          })
+        });
+
+        if (!uploadUrlResponse.ok) {
+          throw new Error(`Upload URL request failed: ${uploadUrlResponse.status} ${uploadUrlResponse.statusText}`);
+        }
+
+        const uploadData = await uploadUrlResponse.json();
+        log(`Upload URL obtained: ${uploadData.data.uploadUrl.substring(0, 100)}...`);
+
+        // Step 3: Upload file with encryption header
+        log('Step 3: Uploading file with x-amz-server-side-encryption header...');
+
+        const uploadPromise = new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+
+          xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+              const progress = Math.round((event.loaded / event.total) * 100);
+              log(`Upload progress: ${progress}%`);
+            }
+          });
+
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              log(`Upload successful! Status: ${xhr.status}`, 'success');
+              resolve();
+            } else {
+              log(`Upload failed! Status: ${xhr.status} - ${xhr.responseText}`, 'error');
+              reject(new Error(`Upload failed with status: ${xhr.status}`));
+            }
+          });
+
+          xhr.addEventListener('error', () => {
+            log('Upload failed due to network error', 'error');
+            reject(new Error('Upload failed due to network error'));
+          });
+
+          // Critical: Open PUT request and add BOTH required headers
+          xhr.open('PUT', uploadData.data.uploadUrl);
+          xhr.setRequestHeader('Content-Type', file.type);
+          xhr.setRequestHeader('x-amz-server-side-encryption', 'AES256'); // This is the FIX!
+
+          log(`Setting headers: Content-Type=${file.type}, x-amz-server-side-encryption=AES256`);
+          xhr.send(file);
+        });
+
+        await uploadPromise;
+        log('✅ ENCRYPTION HEADER TEST PASSED - Upload completed successfully!', 'success');
+        document.getElementById('testLog').className = 'log success';
+
+      } catch (error) {
+        log(`❌ ENCRYPTION HEADER TEST FAILED: ${error.message}`, 'error');
+        document.getElementById('testLog').className = 'log error';
+      }
+    }
+
+    // Initialize log
+    clearLog();
+    log('Encryption header test page loaded');
+    log('CRITICAL FIX: All S3 PUT requests now include x-amz-server-side-encryption: AES256 header');
+  </script>
+</body>
+</html>

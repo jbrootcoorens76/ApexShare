@@ -342,6 +342,7 @@ export const uploadFileChunk = async (
 
     xhr.open('PUT', presignedUrl)
     xhr.setRequestHeader('Content-Type', chunk.type || 'application/octet-stream')
+    xhr.setRequestHeader('x-amz-server-side-encryption', 'AES256')
     xhr.send(chunk)
   })
 }

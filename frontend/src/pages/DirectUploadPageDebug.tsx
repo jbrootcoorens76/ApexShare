@@ -490,6 +490,7 @@ export const DirectUploadPageDebug: React.FC = () => {
           }
 
           xhr.setRequestHeader('Content-Type', state.selectedFile!.type)
+          xhr.setRequestHeader('x-amz-server-side-encryption', 'AES256')
 
           addDebugLog({
             type: 's3_upload_started',

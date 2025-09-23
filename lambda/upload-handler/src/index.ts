@@ -10,8 +10,9 @@
  */
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
-import { S3Client } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
@@ -591,16 +592,32 @@ async function createMultipartUpload(
   s3Key: string,
   body: UploadRequest
 ): Promise<{ uploadUrl: string }> {
-  // For now, we'll use a simple presigned URL approach
-  // In a full implementation, this would use S3's CreateMultipartUpload API
-  // and return presigned URLs for each part
+  try {
+    // Create a PUT command with server-side encryption
+    const putCommand = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Key: s3Key,
+      ContentType: body.mimeType || body.contentType || 'video/mp4',
+      ContentLength: body.fileSize,
+      ServerSideEncryption: 'AES256',
+      Metadata: {
+        'original-filename': body.fileName,
+        'upload-type': 'multipart'
+      }
+    });
 
-  // Generate a base URL that the frontend can use with part numbers
-  const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
+    // Generate presigned URL with encryption headers
+    const uploadUrl = await getSignedUrl(s3Client, putCommand, {
+      expiresIn: PRESIGNED_URL_EXPIRY,
+    });
 
-  return {
-    uploadUrl: baseUrl,
-  };
+    return {
+      uploadUrl: uploadUrl,
+    };
+  } catch (error) {
+    console.error('Error creating multipart upload presigned URL:', error);
+    throw new Error('Failed to create upload URL');
+  }
 }
 
 /**

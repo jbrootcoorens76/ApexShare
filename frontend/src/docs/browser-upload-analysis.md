@@ -58,6 +58,7 @@ if (!token && (config.url?.includes('/sessions') || config.url?.includes('/uploa
 // In DirectUploadPage.tsx - upload implementation
 xhr.open('PUT', uploadResponse.data!.uploadUrl)
 xhr.setRequestHeader('Content-Type', state.selectedFile!.type)
+xhr.setRequestHeader('x-amz-server-side-encryption', 'AES256')
 xhr.send(state.selectedFile)
 ```
 - **Connection pooling**: Safari's connection management differs from Chrome

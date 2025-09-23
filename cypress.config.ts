@@ -57,6 +57,10 @@ export default defineConfig({
             fs.writeFileSync(testVideoPath, buffer);
           }
           return testVideoPath;
+        },
+        generateLargeTestFile() {
+          const { createLargeTestVideo } = require('./cypress/fixtures/create-large-test-video.js');
+          return createLargeTestVideo();
         }
       });
 
