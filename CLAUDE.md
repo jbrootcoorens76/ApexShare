@@ -195,6 +195,11 @@ When working with agents on this project:
 - docs/reports/SESSION_ID_BUG_FIX_REPORT.md - Frontend agent detailed report
 - docs/reports/ARCHITECTURE_VALIDATION_REPORT.md - Original root cause analysis
 
+**Archive Organization:**
+- archives/ - Historical documents from Phase 1-2 organized by category
+- archives/ARCHIVE_SUMMARY.md - Complete list of archived documentation
+- Archived 35+ obsolete documents while preserving for reference
+
 **Phase 3: Production Validation Testing ✅ COMPLETED:**
 - ✅ **Phase 3.1 Technical Validation**: 90% success rate (9/10 tests passed)
   - Infrastructure integration: 100% operational
