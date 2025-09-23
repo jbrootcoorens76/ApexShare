@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Queue Manager Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+
+        .test-section h2 {
+            color: #34495e;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #229954;
+        }
+
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .status-display {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            background-color: white;
+        }
+
+        .file-item {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-info {
+            flex-grow: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .file-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-queued {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .status-uploading {
+            background-color: #cce5ff;
+            color: #0066cc;
+        }
+
+        .status-completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e1e8ed;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .log-output {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .config-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .config-item label {
+            font-weight: 500;
+            color: #34495e;
+            font-size: 14px;
+        }
+
+        .config-item input, .config-item select {
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Upload Queue Manager Test Suite</h1>
+
+        <!-- File Selection -->
+        <div class="test-section">
+            <h2>📁 File Selection</h2>
+            <div class="controls">
+                <input type="file" id="file-input" multiple accept="video/*" style="margin-right: 15px;">
+                <button class="btn-primary" onclick="createTestFiles()">Generate Test Files</button>
+                <button class="btn-success" onclick="queueSelectedFiles()">Queue Selected Files</button>
+                <button class="btn-warning" onclick="clearAllFiles()">Clear All</button>
+            </div>
+            <div id="selected-files" class="file-list"></div>
+        </div>
+
+        <!-- Queue Control -->
+        <div class="test-section">
+            <h2>🎛️ Queue Control</h2>
+            <div class="controls">
+                <button class="btn-success" onclick="startAllUploads()">Start All</button>
+                <button class="btn-warning" onclick="pauseAllUploads()">Pause All</button>
+                <button class="btn-primary" onclick="resumeAllUploads()">Resume All</button>
+                <button class="btn-danger" onclick="cancelAllUploads()">Cancel All</button>
+            </div>
+
+            <div class="status-display">
+                <div>Queue Status: <span id="queue-status">Ready</span></div>
+                <div>Active Uploads: <span id="active-uploads">0</span></div>
+                <div>Completed: <span id="completed-uploads">0</span></div>
+                <div>Queue Length: <span id="queue-length">0</span></div>
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <div class="test-section">
+            <h2>⚙️ Configuration</h2>
+            <div class="config-section">
+                <div class="config-item">
+                    <label>Max Concurrent Files</label>
+                    <input type="number" id="max-files" value="3" min="1" max="10" onchange="updateConfig()">
+                </div>
+                <div class="config-item">
+                    <label>Max Concurrent Chunks</label>
+                    <input type="number" id="max-chunks" value="4" min="1" max="20" onchange="updateConfig()">
+                </div>
+                <div class="config-item">
+                    <label>Priority Mode</label>
+                    <select id="priority-mode" onchange="updateConfig()">
+                        <option value="smallest-first">Smallest First</option>
+                        <option value="largest-first">Largest First</option>
+                        <option value="fifo">FIFO</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>Retry Attempts</label>
+                    <input type="number" id="retry-attempts" value="3" min="0" max="10" onchange="updateConfig()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="test-section">
+            <h2>📊 Performance Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="total-uploads">0</div>
+                    <div class="metric-label">Total Uploads</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="success-rate">0%</div>
+                    <div class="metric-label">Success Rate</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="avg-speed">0 MB/s</div>
+                    <div class="metric-label">Average Speed</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="total-bytes">0 MB</div>
+                    <div class="metric-label">Total Uploaded</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Simulation -->
+        <div class="test-section">
+            <h2>🌐 Network Simulation</h2>
+            <div class="controls">
+                <button class="btn-primary" onclick="simulateNetworkChange('4g')">Simulate 4G</button>
+                <button class="btn-warning" onclick="simulateNetworkChange('3g')">Simulate 3G</button>
+                <button class="btn-danger" onclick="simulateNetworkChange('2g')">Simulate 2G</button>
+                <button class="btn-success" onclick="simulateNetworkChange('wifi')">Simulate WiFi</button>
+            </div>
+            <div class="status-display">
+                <div>Network Type: <span id="network-type">Unknown</span></div>
+                <div>Estimated Speed: <span id="network-speed">0 Mbps</span></div>
+                <div>RTT: <span id="network-rtt">0 ms</span></div>
+            </div>
+        </div>
+
+        <!-- Active Uploads -->
+        <div class="test-section">
+            <h2>📤 Active Uploads</h2>
+            <div id="active-uploads-list" class="file-list"></div>
+        </div>
+
+        <!-- Event Log -->
+        <div class="test-section">
+            <h2>📝 Event Log</h2>
+            <button class="btn-warning" onclick="clearLog()" style="margin-bottom: 10px;">Clear Log</button>
+            <div id="event-log" class="log-output"></div>
+        </div>
+    </div>
+
+    <script>
+        // Mock the upload queue manager for testing
+        class MockUploadQueueManager {
+            constructor() {
+                this.config = {
+                    maxConcurrentFiles: 3,
+                    maxConcurrentChunks: 4,
+                    priorityMode: 'smallest-first',
+                    retryAttempts: 3,
+                    retryDelay: 1000,
+                    adaptiveOptimization: true,
+                    networkOptimization: true
+                };
+
+                this.queue = [];
+                this.activeUploads = new Map();
+                this.completedUploads = new Set();
+                this.performanceMetrics = {
+                    totalUploads: 0,
+                    successfulUploads: 0,
+                    failedUploads: 0,
+                    averageSpeed: 0,
+                    totalBytesUploaded: 0,
+                    activeConcurrency: 0,
+                    optimalConcurrency: 3
+                };
+
+                this.networkMetrics = {
+                    effectiveType: '4g',
+                    speed: 10000000, // 10 Mbps in bytes/sec
+                    rtt: 50,
+                    lastMeasured: Date.now()
+                };
+
+                this.eventListeners = {};
+            }
+
+            on(event, callback) {
+                if (!this.eventListeners[event]) {
+                    this.eventListeners[event] = [];
+                }
+                this.eventListeners[event].push(callback);
+            }
+
+            emit(event, ...args) {
+                if (this.eventListeners[event]) {
+                    this.eventListeners[event].forEach(callback => callback(...args));
+                }
+            }
+
+            queueUpload(fileId, file, sessionId, options = {}) {
+                const queuedFile = {
+                    fileId,
+                    file,
+                    sessionId,
+                    priority: this.calculatePriority(file),
+                    createdAt: Date.now(),
+                    retryCount: 0,
+                    ...options
+                };
+
+                this.queue.push(queuedFile);
+                this.sortQueue();
+
+                this.emit('upload-queued', fileId, queuedFile);
+                this.log(`📤 Queued: ${file.name} (${this.formatFileSize(file.size)})`);
+
+                setTimeout(() => this.processQueue(), 100);
+            }
+
+            calculatePriority(file) {
+                switch (this.config.priorityMode) {
+                    case 'smallest-first':
+                        return file.size;
+                    case 'largest-first':
+                        return -file.size;
+                    default:
+                        return Date.now();
+                }
+            }
+
+            sortQueue() {
+                this.queue.sort((a, b) => a.priority - b.priority);
+            }
+
+            async processQueue() {
+                while (this.activeUploads.size < this.config.maxConcurrentFiles && this.queue.length > 0) {
+                    const queuedFile = this.queue.shift();
+                    if (queuedFile) {
+                        await this.startUpload(queuedFile);
+                    }
+                }
+
+                this.updateStatus();
+            }
+
+            async startUpload(queuedFile) {
+                const { fileId, file } = queuedFile;
+
+                const upload = {
+                    fileId,
+                    file,
+                    progress: 0,
+                    speed: 0,
+                    startTime: Date.now(),
+                    status: 'uploading'
+                };
+
+                this.activeUploads.set(fileId, upload);
+                this.emit('upload-started', fileId, upload);
+                this.log(`🚀 Started: ${file.name}`);
+
+                // Simulate upload progress
+                this.simulateUploadProgress(queuedFile);
+            }
+
+            simulateUploadProgress(queuedFile) {
+                const { fileId, file } = queuedFile;
+                const upload = this.activeUploads.get(fileId);
+                if (!upload) return;
+
+                const progressInterval = setInterval(() => {
+                    upload.progress += Math.random() * 10;
+
+                    if (upload.progress >= 100) {
+                        upload.progress = 100;
+                        upload.status = 'completed';
+
+                        this.activeUploads.delete(fileId);
+                        this.completedUploads.add(fileId);
+                        this.performanceMetrics.successfulUploads++;
+                        this.performanceMetrics.totalBytesUploaded += file.size;
+
+                        this.emit('upload-completed', fileId, { fileName: file.name, fileSize: file.size });
+                        this.log(`✅ Completed: ${file.name}`);
+
+                        clearInterval(progressInterval);
+                        this.processQueue();
+                        return;
+                    }
+
+                    // Calculate simulated speed
+                    const timeElapsed = (Date.now() - upload.startTime) / 1000;
+                    const uploadedBytes = (upload.progress / 100) * file.size;
+                    upload.speed = timeElapsed > 0 ? uploadedBytes / timeElapsed : 0;
+
+                    const progressData = {
+                        fileId,
+                        fileName: file.name,
+                        progress: upload.progress,
+                        speed: upload.speed,
+                        eta: upload.speed > 0 ? (file.size - uploadedBytes) / upload.speed : 0,
+                        status: upload.status,
+                        uploadedBytes,
+                        totalBytes: file.size,
+                        startTime: upload.startTime
+                    };
+
+                    this.emit('upload-progress', fileId, progressData);
+                    this.updateStatus();
+                }, 500);
+            }
+
+            pauseUpload(fileId) {
+                const upload = this.activeUploads.get(fileId);
+                if (upload) {
+                    upload.status = 'paused';
+                    this.emit('upload-paused', fileId);
+                    this.log(`⏸️ Paused: ${upload.file.name}`);
+                }
+            }
+
+            resumeUpload(fileId) {
+                const upload = this.activeUploads.get(fileId);
+                if (upload && upload.status === 'paused') {
+                    upload.status = 'uploading';
+                    this.emit('upload-resumed', fileId);
+                    this.log(`▶️ Resumed: ${upload.file.name}`);
+                }
+            }
+
+            cancelUpload(fileId) {
+                // Remove from queue
+                this.queue = this.queue.filter(q => q.fileId !== fileId);
+
+                // Remove from active uploads
+                const upload = this.activeUploads.get(fileId);
+                if (upload) {
+                    this.activeUploads.delete(fileId);
+                    this.emit('upload-cancelled', fileId);
+                    this.log(`❌ Cancelled: ${upload.file.name}`);
+                }
+
+                this.updateStatus();
+            }
+
+            pauseAllUploads() {
+                this.activeUploads.forEach((upload) => {
+                    if (upload.status === 'uploading') {
+                        this.pauseUpload(upload.fileId);
+                    }
+                });
+            }
+
+            resumeAllUploads() {
+                this.activeUploads.forEach((upload) => {
+                    if (upload.status === 'paused') {
+                        this.resumeUpload(upload.fileId);
+                    }
+                });
+            }
+
+            getQueueStatus() {
+                return {
+                    queueLength: this.queue.length,
+                    activeUploads: this.activeUploads.size,
+                    completedUploads: this.completedUploads.size,
+                    config: { ...this.config },
+                    performanceMetrics: { ...this.performanceMetrics },
+                    networkMetrics: { ...this.networkMetrics }
+                };
+            }
+
+            updateConfig(newConfig) {
+                this.config = { ...this.config, ...newConfig };
+                this.log(`⚙️ Config updated: ${JSON.stringify(newConfig)}`);
+            }
+
+            simulateNetworkChange(networkType) {
+                const networkSettings = {
+                    'wifi': { effectiveType: '4g', speed: 50000000, rtt: 20 },
+                    '4g': { effectiveType: '4g', speed: 10000000, rtt: 50 },
+                    '3g': { effectiveType: '3g', speed: 1000000, rtt: 200 },
+                    '2g': { effectiveType: '2g', speed: 100000, rtt: 500 }
+                };
+
+                const settings = networkSettings[networkType];
+                if (settings) {
+                    this.networkMetrics = {
+                        ...this.networkMetrics,
+                        ...settings,
+                        lastMeasured: Date.now()
+                    };
+
+                    this.emit('network-change', this.networkMetrics);
+                    this.log(`🌐 Network changed to: ${networkType.toUpperCase()}`);
+                }
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logElement = document.getElementById('event-log');
+                logElement.innerHTML += `[${timestamp}] ${message}\n`;
+                logElement.scrollTop = logElement.scrollHeight;
+            }
+
+            updateStatus() {
+                const status = this.getQueueStatus();
+
+                document.getElementById('queue-status').textContent =
+                    status.activeUploads > 0 ? 'Active' : 'Ready';
+                document.getElementById('active-uploads').textContent = status.activeUploads;
+                document.getElementById('completed-uploads').textContent = status.completedUploads;
+                document.getElementById('queue-length').textContent = status.queueLength;
+
+                // Update performance metrics
+                const totalUploads = status.performanceMetrics.successfulUploads + status.performanceMetrics.failedUploads;
+                const successRate = totalUploads > 0 ? (status.performanceMetrics.successfulUploads / totalUploads * 100).toFixed(1) : 0;
+                const avgSpeed = (status.performanceMetrics.averageSpeed / 1024 / 1024).toFixed(2);
+                const totalBytes = (status.performanceMetrics.totalBytesUploaded / 1024 / 1024).toFixed(1);
+
+                document.getElementById('total-uploads').textContent = totalUploads;
+                document.getElementById('success-rate').textContent = successRate + '%';
+                document.getElementById('avg-speed').textContent = avgSpeed + ' MB/s';
+                document.getElementById('total-bytes').textContent = totalBytes + ' MB';
+
+                // Update network info
+                document.getElementById('network-type').textContent = status.networkMetrics.effectiveType.toUpperCase();
+                document.getElementById('network-speed').textContent = (status.networkMetrics.speed / 1024 / 1024).toFixed(1) + ' Mbps';
+                document.getElementById('network-rtt').textContent = status.networkMetrics.rtt + ' ms';
+
+                this.updateActiveUploadsList();
+            }
+
+            updateActiveUploadsList() {
+                const container = document.getElementById('active-uploads-list');
+                container.innerHTML = '';
+
+                if (this.activeUploads.size === 0) {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d;">No active uploads</div>';
+                    return;
+                }
+
+                this.activeUploads.forEach((upload) => {
+                    const item = document.createElement('div');
+                    item.className = 'file-item';
+
+                    const progressPercent = Math.round(upload.progress);
+                    const speedMBps = (upload.speed / 1024 / 1024).toFixed(2);
+
+                    item.innerHTML = `
+                        <div class="file-info">
+                            <div class="file-name">${upload.file.name}</div>
+                            <div class="file-size">${this.formatFileSize(upload.file.size)} • ${speedMBps} MB/s</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercent}%">
+                                    ${progressPercent}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="file-status status-uploading">${upload.status}</div>
+                    `;
+
+                    container.appendChild(item);
+                });
+            }
+        }
+
+        // Initialize the mock queue manager
+        const uploadQueueManager = new MockUploadQueueManager();
+        let selectedFiles = [];
+
+        // Event listeners
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            selectedFiles = Array.from(e.target.files);
+            updateSelectedFilesList();
+        });
+
+        function updateSelectedFilesList() {
+            const container = document.getElementById('selected-files');
+            container.innerHTML = '';
+
+            if (selectedFiles.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d;">No files selected</div>';
+                return;
+            }
+
+            selectedFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${uploadQueueManager.formatFileSize(file.size)}</div>
+                    </div>
+                    <button class="btn-danger" onclick="removeFile(${index})">Remove</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateSelectedFilesList();
+        }
+
+        function createTestFiles() {
+            // Create mock files of different sizes
+            const testFiles = [
+                { name: 'small-video.mp4', size: 5 * 1024 * 1024 },      // 5MB
+                { name: 'medium-video.mp4', size: 25 * 1024 * 1024 },    // 25MB
+                { name: 'large-video.mp4', size: 100 * 1024 * 1024 },    // 100MB
+                { name: 'huge-video.mp4', size: 500 * 1024 * 1024 },     // 500MB
+                { name: 'tiny-clip.mp4', size: 1024 * 1024 }              // 1MB
+            ];
+
+            selectedFiles = testFiles.map(({ name, size }) => {
+                const file = new File(['mock content'], name, { type: 'video/mp4' });
+                Object.defineProperty(file, 'size', { value: size, writable: false });
+                return file;
+            });
+
+            updateSelectedFilesList();
+            uploadQueueManager.log('📁 Generated test files');
+        }
+
+        function queueSelectedFiles() {
+            if (selectedFiles.length === 0) {
+                alert('Please select or generate files first');
+                return;
+            }
+
+            selectedFiles.forEach((file, index) => {
+                uploadQueueManager.queueUpload(`file-${Date.now()}-${index}`, file, 'test-session');
+            });
+
+            uploadQueueManager.log(`📤 Queued ${selectedFiles.length} files`);
+        }
+
+        function clearAllFiles() {
+            selectedFiles = [];
+            updateSelectedFilesList();
+            uploadQueueManager.log('🗑️ Cleared selected files');
+        }
+
+        function startAllUploads() {
+            queueSelectedFiles();
+        }
+
+        function pauseAllUploads() {
+            uploadQueueManager.pauseAllUploads();
+        }
+
+        function resumeAllUploads() {
+            uploadQueueManager.resumeAllUploads();
+        }
+
+        function cancelAllUploads() {
+            uploadQueueManager.activeUploads.forEach((upload) => {
+                uploadQueueManager.cancelUpload(upload.fileId);
+            });
+            uploadQueueManager.queue = [];
+            uploadQueueManager.updateStatus();
+            uploadQueueManager.log('❌ Cancelled all uploads');
+        }
+
+        function updateConfig() {
+            const config = {
+                maxConcurrentFiles: parseInt(document.getElementById('max-files').value),
+                maxConcurrentChunks: parseInt(document.getElementById('max-chunks').value),
+                priorityMode: document.getElementById('priority-mode').value,
+                retryAttempts: parseInt(document.getElementById('retry-attempts').value)
+            };
+
+            uploadQueueManager.updateConfig(config);
+        }
+
+        function simulateNetworkChange(networkType) {
+            uploadQueueManager.simulateNetworkChange(networkType);
+            uploadQueueManager.updateStatus();
+        }
+
+        function clearLog() {
+            document.getElementById('event-log').innerHTML = '';
+        }
+
+        // Initialize the interface
+        uploadQueueManager.updateStatus();
+        uploadQueueManager.log('🚀 Upload Queue Manager Test Suite initialized');
+
+        // Update status every second
+        setInterval(() => {
+            uploadQueueManager.updateStatus();
+        }, 1000);
+    </script>
+</body>
+</html>

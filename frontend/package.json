@@ -12,7 +12,18 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "coverage": "vitest run --coverage"
+    "test:watch": "vitest --watch",
+    "coverage": "vitest run --coverage",
+    "test:performance": "vitest run src/tests/uploadQueueManager.performance.test.ts",
+    "test:functional": "vitest run src/tests/uploadQueueManager.functional.test.ts",
+    "test:load": "vitest run src/tests/uploadQueueManager.load.test.ts",
+    "test:integration": "vitest run src/tests/uploadQueueManager.integration.test.ts",
+    "test:edge-cases": "vitest run src/tests/uploadQueueManager.edge-cases.test.ts",
+    "test:benchmark": "vitest run src/tests/uploadQueueManager.benchmark.test.ts",
+    "test:production": "vitest run src/tests/production-readiness.test.ts",
+    "test:comprehensive": "node run-comprehensive-tests.js",
+    "test:quick": "vitest run src/tests/uploadQueueManager.test.ts",
+    "validate": "npm run typecheck && npm run lint && npm run test:quick"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -49,7 +60,11 @@
     "vite": "^5.0.0",
     "vitest": "^1.0.0",
     "@vitest/ui": "^1.0.0",
-    "@vitest/coverage-v8": "^1.0.0"
+    "@vitest/coverage-v8": "^1.0.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/react-hooks": "^8.0.1",
+    "@testing-library/jest-dom": "^6.1.4",
+    "jsdom": "^23.0.0"
   },
   "browserslist": {
     "production": [
