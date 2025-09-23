@@ -281,17 +281,37 @@ export const DirectUploadPageDebug: React.FC = () => {
 
       const sessionResponse = await apiService.sessions.create(sessionData)
 
+      // Enhanced debugging: log the exact response structure
+      console.log('Session Response (raw):', sessionResponse)
+      console.log('Session Response Success:', sessionResponse?.success)
+      console.log('Session Response Data:', sessionResponse?.data)
+      console.log('Session Response Data ID:', sessionResponse?.data?.id)
+
       if (!sessionResponse.success || !sessionResponse.data) {
+        console.error('Session creation failed - response:', sessionResponse)
         throw new Error('Failed to create upload session')
       }
 
       const sessionId = sessionResponse.data.id
+
+      // Additional debug check
+      if (!sessionId) {
+        console.error('Session ID is undefined! Full response:', sessionResponse)
+        throw new Error('Session created but no ID returned')
+      }
+
       monitor.trackProgress(30, 100, 'session_creation')
 
       addDebugLog({
         type: 'session_created',
         sessionId,
         response: sessionResponse,
+        debugInfo: {
+          hasSessionId: !!sessionId,
+          sessionIdValue: sessionId,
+          responseKeys: Object.keys(sessionResponse || {}),
+          dataKeys: Object.keys(sessionResponse?.data || {}),
+        }
       })
 
       // Phase 2: Get upload URL with browser-specific debugging

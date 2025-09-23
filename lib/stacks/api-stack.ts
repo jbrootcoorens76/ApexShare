@@ -668,6 +668,7 @@ export class ApiStack extends cdk.Stack {
     });
 
     // Create separate model for session-based upload requests (new frontend)
+    // Aligned with frontend payload: only contentType field, no mimeType
     // More permissive validation to prevent API Gateway "Failed to fetch" errors
     // Detailed validation is handled in Lambda function for better error handling
     const sessionUploadRequestModel = this.api.addModel('SessionUploadRequestModel', {
@@ -688,14 +689,13 @@ export class ApiStack extends cdk.Stack {
           contentType: {
             type: apigateway.JsonSchemaType.STRING,
             minLength: 1,
+            maxLength: 100, // Reasonable limit for MIME types
           },
-          mimeType: {
-            type: apigateway.JsonSchemaType.STRING,
-            minLength: 1,
-          },
+          // Remove mimeType field to match frontend payload exactly
+          // Lambda handler supports both contentType and mimeType for backward compatibility
         },
-        required: ['fileName', 'fileSize'],
-        additionalProperties: true,
+        required: ['fileName', 'fileSize', 'contentType'], // Make contentType required since frontend always sends it
+        additionalProperties: true, // Allow additional fields for extensibility
       },
     });
 

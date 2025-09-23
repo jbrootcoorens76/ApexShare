@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApexShare - Session Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log h3 {
+            margin-top: 0;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .log-entry.success {
+            background: #d4edda;
+            border-left: 3px solid #28a745;
+        }
+        .log-entry.error {
+            background: #f8d7da;
+            border-left: 3px solid #dc3545;
+        }
+        .log-entry.info {
+            background: #d1ecf1;
+            border-left: 3px solid #17a2b8;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ApexShare - Session Fix Test</h1>
+        <p>This test verifies that the session ID bug has been fixed and that the frontend can properly extract session IDs from the backend response.</p>
+
+        <form id="testForm">
+            <div class="form-group">
+                <label for="studentName">Student Name:</label>
+                <input type="text" id="studentName" value="Test Student" required>
+            </div>
+
+            <div class="form-group">
+                <label for="studentEmail">Student Email:</label>
+                <input type="email" id="studentEmail" value="test@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="trainerName">Trainer Name:</label>
+                <input type="text" id="trainerName" value="Test Trainer" required>
+            </div>
+
+            <div class="form-group">
+                <label for="sessionDate">Session Date:</label>
+                <input type="date" id="sessionDate" required>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes:</label>
+                <textarea id="notes" rows="3" placeholder="Optional session notes..."></textarea>
+            </div>
+
+            <button type="submit" id="testButton">Test Session Creation & Upload URL</button>
+        </form>
+
+        <div id="status" style="display: none;"></div>
+
+        <div class="log">
+            <h3>Test Log</h3>
+            <div id="logEntries"></div>
+        </div>
+    </div>
+
+    <script>
+        // Set default date to today
+        document.getElementById('sessionDate').value = new Date().toISOString().split('T')[0];
+
+        const logEntries = document.getElementById('logEntries');
+        const statusDiv = document.getElementById('status');
+
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            logEntries.appendChild(entry);
+            logEntries.scrollTop = logEntries.scrollHeight;
+        }
+
+        function setStatus(message, type) {
+            statusDiv.style.display = 'block';
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+
+        async function testSessionFlow() {
+            const button = document.getElementById('testButton');
+            button.disabled = true;
+
+            try {
+                addLog('Starting session fix test...', 'info');
+                setStatus('Testing session creation...', 'pending');
+
+                // Collect form data
+                const formData = {
+                    studentName: document.getElementById('studentName').value,
+                    studentEmail: document.getElementById('studentEmail').value,
+                    trainerName: document.getElementById('trainerName').value,
+                    sessionDate: document.getElementById('sessionDate').value,
+                    notes: document.getElementById('notes').value
+                };
+
+                // Create session data in the format the frontend sends
+                const sessionData = {
+                    title: `Session for ${formData.studentEmail} - ${formData.sessionDate}`,
+                    description: formData.notes || 'Test session for session ID fix',
+                    studentEmails: [formData.studentEmail],
+                    isPublic: false,
+                    metadata: {
+                        studentName: formData.studentName,
+                        trainerName: formData.trainerName,
+                        date: formData.sessionDate,
+                        notes: formData.notes,
+                        uploadType: 'test',
+                        browser: navigator.userAgent
+                    }
+                };
+
+                addLog(`Sending session data: ${JSON.stringify(sessionData, null, 2)}`, 'info');
+
+                // Step 1: Create session
+                const sessionResponse = await fetch('https://api.apexshare.be/sessions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Public-Access': 'true'
+                    },
+                    body: JSON.stringify(sessionData)
+                });
+
+                if (!sessionResponse.ok) {
+                    throw new Error(`Session creation failed: ${sessionResponse.status} ${sessionResponse.statusText}`);
+                }
+
+                const sessionResult = await sessionResponse.json();
+                addLog(`Session response: ${JSON.stringify(sessionResult, null, 2)}`, 'info');
+
+                if (!sessionResult.success || !sessionResult.data || !sessionResult.data.id) {
+                    throw new Error('Session created but no ID returned or invalid response structure');
+                }
+
+                const sessionId = sessionResult.data.id;
+                addLog(`✅ Session created successfully with ID: ${sessionId}`, 'success');
+                setStatus('Session created! Testing upload URL...', 'pending');
+
+                // Step 2: Test upload URL generation
+                const uploadData = {
+                    fileName: 'test-fix-video.mp4',
+                    fileSize: 12345678,
+                    contentType: 'video/mp4'
+                };
+
+                addLog(`Testing upload URL for session ${sessionId}...`, 'info');
+
+                const uploadResponse = await fetch(`https://api.apexshare.be/sessions/${sessionId}/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Public-Access': 'true'
+                    },
+                    body: JSON.stringify(uploadData)
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error(`Upload URL generation failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+                }
+
+                const uploadResult = await uploadResponse.json();
+                addLog(`Upload response: ${JSON.stringify(uploadResult, null, 2)}`, 'info');
+
+                if (!uploadResult.success || !uploadResult.data || !uploadResult.data.uploadUrl) {
+                    throw new Error('Upload URL generation failed or invalid response structure');
+                }
+
+                addLog(`✅ Upload URL generated successfully!`, 'success');
+                addLog(`Upload ID: ${uploadResult.data.uploadId}`, 'info');
+                addLog(`Upload URL: ${uploadResult.data.uploadUrl}`, 'info');
+
+                setStatus('✅ Session fix test PASSED! Session ID is properly extracted and used.', 'success');
+                addLog(`🎉 TEST PASSED: Session ID bug has been fixed!`, 'success');
+
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
+                setStatus(`❌ Test FAILED: ${error.message}`, 'error');
+                console.error('Test error:', error);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('testForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            testSessionFlow();
+        });
+
+        // Add initial log entry
+        addLog('Test page loaded. Click "Test Session Creation & Upload URL" to start the test.', 'info');
+    </script>
+</body>
+</html>

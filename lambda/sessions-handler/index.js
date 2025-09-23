@@ -159,9 +159,35 @@ async function getSession(sessionId) {
 // Create new session
 async function createSession(sessionData) {
   try {
+    // Enhanced logging for debugging
+    console.log('Received session data:', JSON.stringify(sessionData, null, 2));
+
+    // Handle both frontend format and direct format
+    // The frontend sends: { title, description, studentEmails, isPublic, metadata }
+    // We need to transform this into the expected backend format
+    let processedData = {};
+
+    if (sessionData.studentEmails && Array.isArray(sessionData.studentEmails)) {
+      // Frontend format - transform it
+      processedData = {
+        studentName: sessionData.metadata?.studentName || 'Unknown Student',
+        studentEmail: sessionData.studentEmails[0] || 'no-email@example.com',
+        trainerName: sessionData.metadata?.trainerName || 'Unknown Trainer',
+        sessionDate: sessionData.metadata?.date || new Date().toISOString().split('T')[0],
+        notes: sessionData.description || sessionData.metadata?.notes || '',
+        title: sessionData.title || 'Training Session',
+        isPublic: sessionData.isPublic || false,
+        metadata: sessionData.metadata || {}
+      };
+    } else {
+      // Direct format - use as is
+      processedData = sessionData;
+    }
+
+    const sessionId = uuidv4();
     const session = {
-      id: uuidv4(),
-      ...sessionData,
+      id: sessionId,
+      ...processedData,
       status: 'pending',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -169,12 +195,17 @@ async function createSession(sessionData) {
     };
 
     // In production, save to DynamoDB here
-    console.log('Creating session:', session);
+    console.log('Creating session with ID:', sessionId);
+    console.log('Full session object:', JSON.stringify(session, null, 2));
 
-    return createResponse(201, {
+    const response = {
       success: true,
       data: session
-    });
+    };
+
+    console.log('Returning response:', JSON.stringify(response, null, 2));
+
+    return createResponse(201, response);
 
   } catch (error) {
     console.error('Error creating session:', error);
